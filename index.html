@@ -328,6 +328,9 @@
                     <div class="flex justify-between items-start mb-2">
                         <h3 class="text-[13px] font-bold text-slate-600 transition-colors flex items-center gap-1">
                             <span id="text_card1">الرصيد الافتتاحي للنقد</span>
+                            <button onclick="editOpeningBalance()" class="no-print text-slate-300 hover:text-[var(--gold-primary)] mr-1.5 transition-colors" title="تعديل الرصيد الافتتاحي">
+                                <i class="fa-solid fa-pen text-[10px]"></i>
+                            </button>
                         </h3>
                         <div class="icon-box icon-unified"><i class="fa-solid fa-door-open"></i></div>
                     </div>
@@ -599,6 +602,24 @@
             </div>
         </div>
 
+        <!-- نافذة تعديل الرصيد الافتتاحي -->
+        <div id="openBalanceModal" class="modal-overlay no-print" style="z-index: 60;">
+            <div class="bg-white rounded-xl shadow-2xl border border-slate-200 w-[350px] overflow-hidden transform scale-100">
+                <div class="bg-[var(--gold-primary)] text-white px-5 py-3 flex items-center gap-2">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                    <h3 class="font-bold text-[14px]">تعديل الرصيد الافتتاحي</h3>
+                </div>
+                <div class="p-5 flex flex-col gap-4">
+                    <p class="text-[12px] text-slate-600 font-bold">يرجى إدخال القيمة الجديدة للرصيد الافتتاحي للنقد:</p>
+                    <input type="text" id="openBalanceInput" class="w-full px-4 py-2 border border-slate-300 rounded-lg text-left focus:outline-none focus:border-[var(--gold-primary)] font-numbers text-lg" dir="ltr" onfocus="this.value = window.parseFormatted(this.value); this.select();" onblur="this.value = window.formatCurr(window.parseFormatted(this.value));">
+                    <div class="flex gap-2 mt-2">
+                        <button onclick="saveOpeningBalance()" class="flex-1 bg-[var(--success)] text-white py-2 rounded-lg text-[13px] font-bold hover:bg-green-700 transition-colors">حفظ التحديث</button>
+                        <button onclick="closeOpenBalanceModal()" class="flex-1 bg-slate-100 text-slate-600 py-2 rounded-lg text-[13px] font-bold hover:bg-slate-200 transition-colors">إلغاء</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <!-- ========================================== -->
@@ -628,15 +649,18 @@
             if (event.key === "Escape") {
                 const passwordModal = document.getElementById('passwordModal');
                 const detailsModal = document.getElementById('detailsModal');
+                const openBalanceModal = document.getElementById('openBalanceModal');
+                
                 if (passwordModal.classList.contains('active')) window.closePasswordModal();
+                else if (openBalanceModal && openBalanceModal.classList.contains('active')) window.closeOpenBalanceModal();
                 else if (detailsModal.classList.contains('active')) window.closeDetails();
             }
         });
 
         // قاعدة البيانات الموزونة رياضياً 100% للتطابق مع طلبات الإدارة التنفيذية بالهللة
         window.appState = {
-            version: 4, // تحديث آلي للسحابة لفرض الأرقام الدقيقة (النسخة الرابعة)
-            openBalance: 212030863.55,
+            version: 6, // تحديث آلي للسحابة (النسخة السادسة) لإلغاء أي قيم خاطئة سابقة وإضافة أداة الرصيد الافتتاحي
+            openBalance: 400000,
             dateStartStr: "16 Nov 2025",
             dateEndStr: "31 Mar 2026",
             titles: {
@@ -677,7 +701,6 @@
                 { id: 'or8', name: "تحصيلات من ايجار ارض المزروعية", nov: 0, dec: 1244548, jan: 0, feb: 0, mar: 0 },
                 { id: 'or9', name: "تحصيلات من ايجار ارض حائل", nov: 2011529, dec: 0, jan: 0, feb: 0, mar: 0 }
             ],
-            // التوزيع الموزون للمدفوعات لضمان تحقيق (يناير:-14M) (فبراير:134M) (مارس:-28M) بدقة 100%
             opPay: [
                 { id: 'op1', name: "الرواتب", nov: 900000, dec: 900000, jan: 900000, feb: 900000, mar: 900000 },
                 { id: 'op2', name: "مصروفات التشغيل", nov: 623870.83, dec: 338870.83, jan: 637620.83, feb: 745120.84, mar: 873870.83 }, 
@@ -715,7 +738,6 @@
                 { id: 'ip6', name: "جاديت (استعاضة أرتال)", nov: 3375292.9, dec: 4050351.48, jan: 3645316.33, feb: 3280784.69, mar: 2952706.23 },
                 { id: 'ip7', name: "مخطط الغروب", nov: 142600, dec: 142600, jan: 4397654.33, feb: 1978944.45, mar: 2374733.34 },
                 { id: 'ip8', name: "مخطط الرابيه", nov: 247224.13, dec: 0, jan: 0, feb: 0, mar: 0 },
-                // تم نقل كليات الغد لنوفمبر لضبط صافي النقد بدقة كما هو بميزانيتك الأصلية
                 { id: 'ip9', name: "سداد باقى ارض كليات الغد", nov: 50000000, dec: 0, jan: 0, feb: 0, mar: 0 }
             ],
             finRec: [
@@ -749,8 +771,8 @@
         window.loadFromFirebase = async function() {
             try {
                 const docSnap = await getDoc(doc(db, "reports", "executive_dashboard"));
-                // نعتمد النسخة الرابعة فوراً لضمان الأرقام الدقيقة التي تطلبها
-                if (docSnap.exists() && docSnap.data().version === 4) {
+                // نعتمد النسخة السادسة فوراً لضمان إزالة أي تعديلات سابقة خاطئة للشهور
+                if (docSnap.exists() && docSnap.data().version === 6) {
                     window.appState = docSnap.data();
                 } else {
                     await window.saveToFirebase(); 
@@ -1303,8 +1325,39 @@
             window.saveToFirebase(); 
         }
 
+        // --- دوال تعديل الرصيد الافتتاحي الجديدة ---
+        window.editOpeningBalance = function() {
+            window.requestAuth(() => {
+                const input = document.getElementById('openBalanceInput');
+                input.value = window.formatCurr(window.appState.openBalance);
+                document.getElementById('openBalanceModal').classList.add('active');
+                setTimeout(() => input.focus(), 100);
+            });
+        }
+
+        window.closeOpenBalanceModal = function() {
+            document.getElementById('openBalanceModal').classList.remove('active');
+        }
+
+        window.saveOpeningBalance = function() {
+            const val = window.parseFormatted(document.getElementById('openBalanceInput').value);
+            if (!isNaN(val)) {
+                window.appState.openBalance = val;
+                window.appState.version = 6; // رفع النسخة لضمان المزامنة
+                window.updateDashboard();
+                window.closeOpenBalanceModal();
+                window.saveToFirebase();
+            } else {
+                alert("يرجى إدخال رقم صحيح.");
+            }
+        }
+
+        // مستمعات لوحة المفاتيح
         document.getElementById('passInput').addEventListener('keypress', function (e) {
             if (e.key === 'Enter') window.verifyPassword();
+        });
+        document.getElementById('openBalanceInput').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') window.saveOpeningBalance();
         });
 
     </script>
