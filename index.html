@@ -480,7 +480,7 @@
                                 <span id="ui-fin-rec" class="font-numbers font-black text-[var(--charcoal-900)] text-[14px] w-[140px] inline-block text-right" dir="ltr">0.00</span>
                             </div>
                             <div onclick="openDetails('finPay', 'مدفوعات الأنشطة التمويلية')" class="clickable-row flex justify-between items-center bg-slate-50 px-4 py-2.5 rounded-lg border border-slate-100">
-                                <span class="text-[12px] font-bold text-slate-600 flex items-center gap-2"><i class="fa-solid fa-minus text-[9px] text-[var(--danger)]"></i> مدفوعات (توزيعات أرباح)</span>
+                                <span class="text-[12px] font-bold text-slate-600 flex items-center gap-2"><i class="fa-solid fa-minus text-[9px] text-[var(--danger)]"></i> قروض</span>
                                 <span id="ui-fin-pay" class="font-numbers font-black text-[var(--danger)] text-[14px] w-[140px] inline-block text-right" dir="ltr">0.00</span>
                             </div>
                             <div class="flex justify-between items-center bg-slate-100 px-4 py-3 rounded-lg border border-slate-200 mt-1 shadow-sm">
@@ -659,7 +659,7 @@
 
         // قاعدة البيانات الموزونة رياضياً 100% للتطابق مع طلبات الإدارة التنفيذية بالهللة
         window.appState = {
-            version: 6, // تحديث آلي للسحابة (النسخة السادسة) لإلغاء أي قيم خاطئة سابقة وإضافة أداة الرصيد الافتتاحي
+            version: 7, // تحديث آلي للسحابة (النسخة السابعة) لتعديل المسمى إلى قروض
             openBalance: 400000,
             dateStartStr: "16 Nov 2025",
             dateEndStr: "31 Mar 2026",
@@ -744,7 +744,7 @@
                 { id: 'fr1', name: "تمويل مستلم", nov: 0, dec: 0, jan: 0, feb: 140000000.00, mar: 0 }
             ],
             finPay: [
-                { id: 'fp1', name: "مدفوعات (توزيعات أرباح)", nov: 0, dec: 140000000.00, jan: 0, feb: 0, mar: 0 }
+                { id: 'fp1', name: "قروض", nov: 0, dec: 140000000.00, jan: 0, feb: 0, mar: 0 }
             ]
         };
 
@@ -771,8 +771,8 @@
         window.loadFromFirebase = async function() {
             try {
                 const docSnap = await getDoc(doc(db, "reports", "executive_dashboard"));
-                // نعتمد النسخة السادسة فوراً لضمان إزالة أي تعديلات سابقة خاطئة للشهور
-                if (docSnap.exists() && docSnap.data().version === 6) {
+                // نعتمد النسخة السابعة فوراً لضمان إزالة أي تعديلات سابقة واعتماد مسمى قروض
+                if (docSnap.exists() && docSnap.data().version === 7) {
                     window.appState = docSnap.data();
                 } else {
                     await window.saveToFirebase(); 
@@ -1343,7 +1343,7 @@
             const val = window.parseFormatted(document.getElementById('openBalanceInput').value);
             if (!isNaN(val)) {
                 window.appState.openBalance = val;
-                window.appState.version = 6; // رفع النسخة لضمان المزامنة
+                window.appState.version = 7; // رفع النسخة لضمان المزامنة واعتماد التعديل الجديد
                 window.updateDashboard();
                 window.closeOpenBalanceModal();
                 window.saveToFirebase();
