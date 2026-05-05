@@ -11,6 +11,9 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     
+    <!-- مكتبة استخراج البيانات من ملفات Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
     <style>
         :root {
             --gold-primary: #D4AF37;
@@ -21,6 +24,7 @@
             --bg-body: #F1F5F9; 
             --success: #059669;
             --danger: #DC2626;
+            --blue-accent: #2563EB;
         }
 
         body {
@@ -54,7 +58,6 @@
             background: linear-gradient(90deg, var(--charcoal-900) 0%, var(--gold-primary) 50%, var(--charcoal-900) 100%);
         }
 
-        /* فرض الأرقام المجدولة لمحاذاة مثالية للفواصل */
         .font-numbers { 
             font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; 
             letter-spacing: -0.2px; 
@@ -202,40 +205,7 @@
             padding: 5px !important;
             background: white !important;
         }
-        .flatpickr-months {
-            background-color: #F8FAFC !important; 
-            border-radius: 8px 8px 0 0 !important;
-            padding: 10px 0 !important;
-            border-bottom: 1px solid #E2E8F0;
-        }
-        .flatpickr-month, .flatpickr-current-month .flatpickr-monthDropdown-months, .flatpickr-current-month input.cur-year, .flatpickr-current-month .numInputWrapper {
-            color: var(--charcoal-900) !important;
-            fill: var(--charcoal-900) !important;
-            font-weight: 800 !important;
-        }
-        .flatpickr-prev-month, .flatpickr-next-month {
-            color: var(--charcoal-900) !important;
-            fill: var(--charcoal-900) !important;
-        }
-        .flatpickr-prev-month:hover svg, .flatpickr-next-month:hover svg {
-            fill: var(--gold-primary) !important;
-        }
-        .flatpickr-weekday {
-            color: var(--charcoal-600) !important;
-            font-weight: 800 !important;
-        }
-        .flatpickr-day.selected, .flatpickr-day.startRange, .flatpickr-day.endRange, .flatpickr-day.selected.inRange, .flatpickr-day.startRange.inRange, .flatpickr-day.endRange.inRange, .flatpickr-day.selected:focus, .flatpickr-day.startRange:focus, .flatpickr-day.endRange:focus, .flatpickr-day.selected:hover, .flatpickr-day.startRange:hover, .flatpickr-day.endRange:hover, .flatpickr-day.selected.prevMonthDay, .flatpickr-day.startRange.prevMonthDay, .flatpickr-day.endRange.prevMonthDay, .flatpickr-day.selected.nextMonthDay, .flatpickr-day.startRange.nextMonthDay, .flatpickr-day.endRange.nextMonthDay {
-            background: var(--gold-primary) !important;
-            border-color: var(--gold-primary) !important;
-            color: white !important;
-            font-weight: bold;
-        }
-        .flatpickr-day:hover {
-            background: #FDFBF7 !important;
-            border-color: var(--gold-primary) !important;
-            color: var(--charcoal-900) !important;
-        }
-
+        
         @media print {
             @page { size: 1600px 900px; margin: 0 !important; }
             html, body {
@@ -253,15 +223,27 @@
             .executive-card { transform: none !important; box-shadow: none !important; }
             .modal-overlay { display: none !important; }
             .flatpickr-calendar { display: none !important; }
+            img { image-rendering: high-quality !important; filter: none !important; }
+        }
 
-            /* حماية الشعار من التكسير أثناء الطباعة */
-            img {
-                image-rendering: -webkit-optimize-contrast !important;
-                image-rendering: crisp-edges !important;
-                image-rendering: high-quality !important;
-                filter: none !important; 
-                -webkit-filter: none !important;
-            }
+        /* تنسيق زر السحابة والألوان */
+        .btn-sync {
+            background: linear-gradient(135deg, var(--blue-accent) 0%, #1D4ED8 100%);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+            color: white;
+        }
+        .btn-sync:hover {
+            box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
+            transform: translateY(-1px);
+        }
+        .btn-excel {
+            background: linear-gradient(135deg, var(--success) 0%, #047857 100%);
+            box-shadow: 0 4px 12px rgba(5, 150, 105, 0.2);
+            color: white;
+        }
+        .btn-excel:hover {
+            box-shadow: 0 6px 16px rgba(5, 150, 105, 0.4);
+            transform: translateY(-1px);
         }
     </style>
 </head>
@@ -281,7 +263,7 @@
                     </h1>
                     <p class="text-[14px] text-[var(--charcoal-600)] font-bold flex items-center gap-2">
                         <i class="fa-solid fa-file-invoice-dollar text-[var(--gold-dark)]"></i>
-                        <span id="text_subTitle">تقرير شهري</span>
+                        <span id="text_subTitle">تقرير شهري (عرض حسب النطاق الزمني)</span>
                     </p>
                 </div>
             </div>
@@ -293,7 +275,7 @@
                 <div class="flex items-center gap-2 mb-1.5 z-10 w-full justify-center text-[var(--charcoal-600)]">
                     <i class="fa-regular fa-calendar-check text-[14px] text-[var(--gold-dark)]"></i>
                     <p class="text-[11px] font-black tracking-wide flex items-center gap-1">
-                        <span id="text_timeRange">النطاق الزمني للتقرير</span>
+                        <span id="text_timeRange">النطاق الزمني المعروض</span>
                     </p>
                 </div>
                 
@@ -324,11 +306,11 @@
             
             <!-- القسم الأول: المؤشرات الخمسة الرئيسية -->
             <div class="grid grid-cols-5 gap-5 shrink-0 min-h-[105px]">
-                <div class="executive-card p-4 border-t-4 border-t-[var(--gold-primary)] bg-white">
+                <div class="executive-card p-4 border-t-4 border-t-[var(--gold-primary)] bg-white relative group">
                     <div class="flex justify-between items-start mb-2">
                         <h3 class="text-[13px] font-bold text-slate-600 transition-colors flex items-center gap-1">
-                            <span id="text_card1">الرصيد الافتتاحي للنقد</span>
-                            <button onclick="editOpeningBalance()" class="no-print text-slate-300 hover:text-[var(--gold-primary)] mr-1.5 transition-colors" title="تعديل الرصيد الافتتاحي">
+                            <span id="text_card1">رصيد بداية الفترة (تراكمي)</span>
+                            <button onclick="editOpeningBalance()" class="no-print text-slate-300 hover:text-[var(--gold-primary)] mr-1.5 transition-colors" title="تعديل الرصيد الأساسي الكلي">
                                 <i class="fa-solid fa-pen text-[10px]"></i>
                             </button>
                         </h3>
@@ -338,12 +320,16 @@
                         <span id="ui-open-balance" class="text-[22px] font-black text-[var(--charcoal-900)] font-numbers dir-ltr tracking-tight">400,000</span>
                         <span class="text-[12px] font-bold text-slate-400">ريال</span>
                     </div>
+                    <!-- Tooltip لتوضيح الحسبة التراكمية -->
+                    <div class="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-[var(--charcoal-900)] text-white text-[10px] px-3 py-1.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                        يتم حسابه آلياً بناءً على الرصيد الأساسي وأرصدة الأشهر السابقة للتاريخ المحدد.
+                    </div>
                 </div>
 
                 <div class="executive-card p-4 border-t-4 border-t-[var(--gold-primary)] bg-white">
                     <div class="flex justify-between items-start mb-2">
                         <h3 class="text-[13px] font-bold text-slate-600 transition-colors flex items-center gap-1">
-                            <span id="text_card2">إجمالي المقبوضات</span>
+                            <span id="text_card2">إجمالي المقبوضات (للفترة)</span>
                         </h3>
                         <div class="icon-box icon-unified"><i class="fa-solid fa-arrow-trend-up"></i></div>
                     </div>
@@ -356,7 +342,7 @@
                 <div class="executive-card p-4 border-t-4 border-t-[var(--gold-primary)] bg-white">
                     <div class="flex justify-between items-start mb-2">
                         <h3 class="text-[13px] font-bold text-slate-600 transition-colors flex items-center gap-1">
-                            <span id="text_card3">إجمالي المدفوعات</span>
+                            <span id="text_card3">إجمالي المدفوعات (للفترة)</span>
                         </h3>
                         <div class="icon-box icon-unified"><i class="fa-solid fa-arrow-trend-down"></i></div>
                     </div>
@@ -369,7 +355,7 @@
                 <div class="executive-card p-4 border-t-4 border-t-[var(--gold-primary)] bg-white">
                     <div class="flex justify-between items-start mb-2">
                         <h3 class="text-[13px] font-bold text-slate-600 transition-colors flex items-center gap-1">
-                            <span id="text_card4">صافي التغيير</span>
+                            <span id="text_card4">صافي تغيير الفترة</span>
                         </h3>
                         <div class="icon-box icon-unified"><i class="fa-solid fa-scale-unbalanced"></i></div>
                     </div>
@@ -382,7 +368,7 @@
                 <div class="executive-card p-4 border-t-4 border-t-[var(--gold-primary)] bg-white">
                     <div class="flex justify-between items-start mb-2">
                         <h3 id="ui-final-title" class="text-[13px] font-bold text-slate-600 transition-colors flex items-center gap-1">
-                            <span id="text_card5">الرصيد النهائي</span>
+                            <span id="text_card5">الرصيد النهائي (تراكمي)</span>
                         </h3>
                         <div class="icon-box icon-unified"><i class="fa-solid fa-flag-checkered"></i></div>
                     </div>
@@ -397,7 +383,7 @@
             <div class="flex flex-col gap-2 shrink-0">
                 <div class="flex items-center justify-between mb-1">
                     <h2 class="text-[15px] font-black text-[var(--charcoal-900)] flex items-center gap-2 border-r-4 border-[var(--gold-primary)] pr-2">
-                        <span id="text_secMain">تحليل تفصيلي للحركة حسب نوع النشاط</span>
+                        <span id="text_secMain">تحليل تفصيلي للحركة حسب نوع النشاط للفترة المحددة</span>
                     </h2>
                 </div>
                 
@@ -492,16 +478,16 @@
                 </div>
             </div>
 
-            <!-- القسم الثالث: مسار التدفقات النقدية الزمني (التصميم الأنيق المعتمد) -->
+            <!-- القسم الثالث: مسار التدفقات النقدية الزمني -->
             <div class="flex-1 flex flex-col mt-2 mb-1 shrink-0 min-h-0">
                 <div class="flex items-center justify-between mb-2 shrink-0">
                     <h2 class="text-[15px] font-black text-[var(--charcoal-900)] flex items-center gap-2 border-r-4 border-[var(--gold-primary)] pr-2">
-                        <span id="text_timelineTitle">التتبع الزمني لمسار السيولة والأرصدة</span>
+                        <span id="text_timelineTitle">التتبع الزمني لمسار السيولة والأرصدة (للفترة المعروضة)</span>
                     </h2>
                 </div>
                 <div class="flex-1 bg-white rounded-xl border border-slate-200 shadow-sm relative z-0 flex flex-col justify-center overflow-x-auto custom-scroll">
                     <div id="timeline-container" class="relative w-full flex justify-between items-start px-6 min-w-max py-4">
-                        <!-- سيتم رسم خط الزمن هنا برمجياً -->
+                        <!-- سيتم رسم خط الزمن هنا برمجياً بناءً على الأشهر المرئية فقط -->
                     </div>
                 </div>
             </div>
@@ -509,24 +495,33 @@
         </main>
 
         <!-- تذييل الصفحة -->
-        <footer class="w-full px-10 flex justify-between items-center text-[13px] bg-white border-t border-slate-200 h-[50px] shrink-0 font-bold text-slate-500">
-            <div class="w-1/3 text-right flex items-center gap-1">
-                <span id="text_footerText" class="text-[var(--charcoal-600)] font-bold">قائمة التدفقات النقدية المباشرة</span>
+        <footer class="w-full px-10 flex justify-between items-center text-[13px] bg-white border-t border-slate-200 h-[60px] shrink-0 font-bold text-slate-500">
+            <div class="w-1/4 text-right flex items-center gap-1">
+                <span id="text_footerText" class="text-[var(--charcoal-600)] font-bold">قائمة التدفقات النقدية</span>
             </div>
-            <div class="w-1/3 flex justify-center flex-col items-center gap-1">
-                <button onclick="window.print()" class="no-print flex items-center gap-2 bg-[var(--charcoal-900)] text-white px-6 py-2 rounded-lg text-[12px] font-bold hover:bg-[var(--charcoal-800)] transition-all shadow-md hover:shadow-lg active:transform active:scale-95">
-                    <i class="fa-solid fa-print text-[13px] text-[var(--gold-primary)]"></i> طباعة التقرير بصيغة PDF
+            <div class="w-2/4 flex justify-center items-center gap-3">
+                <button onclick="window.print()" class="no-print flex items-center gap-2 bg-[var(--charcoal-800)] text-white px-5 py-2.5 rounded-lg text-[12px] font-bold hover:bg-[var(--charcoal-900)] transition-all shadow-sm">
+                    <i class="fa-solid fa-print text-[13px] text-[var(--gold-primary)]"></i> طباعة PDF
                 </button>
-                <span id="cloud-status" class="text-[10px] text-slate-400 font-normal no-print hidden"><i class="fa-solid fa-cloud-arrow-up ml-1"></i>تمت المزامنة السحابية</span>
+                
+                <input type="file" id="excelInput" accept=".xlsx, .xls" class="hidden" onchange="handleExcelImport(event)">
+                <button onclick="document.getElementById('excelInput').click()" class="no-print btn-excel flex items-center gap-2 px-5 py-2.5 rounded-lg text-[12px] font-bold transition-all">
+                    <i class="fa-solid fa-file-excel text-[14px]"></i> استيراد Excel
+                </button>
+
+                <button onclick="requestManualSync()" class="no-print btn-sync flex items-center gap-2 px-5 py-2.5 rounded-lg text-[12px] font-bold transition-all relative overflow-hidden group">
+                    <i class="fa-solid fa-cloud-arrow-up text-[14px]"></i>
+                    <span>حفظ ومزامنة في السحابة</span>
+                    <div class="absolute inset-0 bg-white/20 transform -translate-x-full group-hover:translate-x-full transition-transform duration-500"></div>
+                </button>
             </div>
-            <div class="w-1/3 text-left flex justify-end items-center gap-2">
+            <div class="w-1/4 text-left flex justify-end flex-col items-end gap-0.5">
                 <span id="text_companyName">شركة اتحاد الراجحي</span>
+                <span id="cloud-status" class="text-[10px] text-slate-400 font-normal no-print"><i class="fa-solid fa-cloud text-slate-300 ml-1"></i>بانتظار المزامنة...</span>
             </div>
         </footer>
 
-        <!-- ========================================== -->
-        <!-- نافذة عرض وتعديل التفاصيل (مصفوفة الأشهر الفخمة) -->
-        <!-- ========================================== -->
+        <!-- نافذة عرض وتعديل التفاصيل -->
         <div id="detailsModal" class="modal-overlay no-print">
             <div class="modal-content">
                 <div class="flex justify-between items-center bg-slate-50 px-6 py-4 border-b border-slate-200 shrink-0">
@@ -538,14 +533,14 @@
                                 <i class="fa-solid fa-plus"></i> إضافة بند
                             </button>
                             <button onclick="addMonth()" class="flex items-center gap-1.5 bg-emerald-100 text-emerald-700 px-3 py-1.5 rounded-lg text-[12px] font-bold hover:bg-emerald-200 transition-colors">
-                                <i class="fa-solid fa-calendar-plus"></i> إضافة شهر
+                                <i class="fa-solid fa-calendar-plus"></i> إضافة شهر جديد للنظام
                             </button>
                         </div>
                     </div>
                     
                     <div class="flex items-center gap-3">
                         <button id="editBtn" onclick="requestEditMode()" class="flex items-center gap-2 bg-white border border-slate-300 text-slate-700 px-4 py-1.5 rounded-lg text-[12px] font-bold hover:bg-slate-100 transition-colors shadow-sm">
-                            <i class="fa-solid fa-lock text-[var(--gold-dark)]"></i> تفعيل التعديل
+                            <i class="fa-solid fa-lock text-[var(--gold-dark)]"></i> تفعيل التعديل اليدوي
                         </button>
                         <button onclick="closeDetails()" class="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:text-red-500 hover:bg-red-50 transition-colors shadow-sm" title="إغلاق (Esc)">
                             <i class="fa-solid fa-xmark"></i>
@@ -558,9 +553,8 @@
                         <div id="gridHeader" class="grid-matrix bg-slate-100 border border-slate-200 rounded-lg p-3 mb-3 text-center sticky top-0 z-10 shadow-sm w-full">
                             <!-- Content Injected via JS -->
                         </div>
-
                         <div class="flex flex-col gap-2 w-full" id="detailsList">
-                            <!-- يتم حقن الصفوف هنا برمجياً -->
+                            <!-- يتم حقن الصفوف هنا برمجياً بناءً على الأشهر المرئية -->
                         </div>
                     </div>
                 </div>
@@ -569,14 +563,15 @@
                 <div class="bg-slate-50 px-6 py-4 border-t border-slate-200 shrink-0 flex justify-between items-center min-w-max">
                     <div class="flex items-center">
                         <h2 class="text-[18px] font-black text-[var(--charcoal-900)] border-r-4 border-[var(--gold-primary)] pr-3 flex items-center gap-2">
-                            الإجمالي النهائي: 
+                            الإجمالي للفترة المعروضة: 
                             <span id="modalTotal" class="font-numbers text-[var(--gold-dark)] mr-1 text-right" dir="ltr">0.00</span> 
                             <span class="text-[14px] text-slate-500 mr-1">ريال</span>
                         </h2>
                     </div>
                     <div class="flex items-center gap-4">
-                        <button id="saveBtn" onclick="saveChanges()" class="hidden flex items-center gap-2 bg-[var(--success)] text-white px-6 py-2 rounded-lg text-[13px] font-bold hover:bg-green-700 transition-colors shadow-md">
-                            <i class="fa-solid fa-check"></i> حفظ واعتماد التحديثات
+                        <!-- تم إخفاء زر الحفظ التلقائي من هنا ونقله للرئيسية لحماية البيانات -->
+                        <button id="saveBtn" onclick="closeDetails()" class="hidden flex items-center gap-2 bg-[var(--charcoal-900)] text-white px-6 py-2 rounded-lg text-[13px] font-bold hover:bg-black transition-colors shadow-md">
+                            <i class="fa-solid fa-check"></i> إنهاء التعديل (تذكر الحفظ السحابي لاحقاً)
                         </button>
                     </div>
                 </div>
@@ -588,10 +583,10 @@
             <div class="bg-white rounded-xl shadow-2xl border border-slate-200 w-[350px] overflow-hidden transform scale-100">
                 <div class="bg-[var(--charcoal-900)] text-white px-5 py-3 flex items-center gap-2">
                     <i class="fa-solid fa-shield-halved text-[var(--gold-primary)]"></i>
-                    <h3 class="font-bold text-[14px]">صلاحية الوصول للإدارة المالية</h3>
+                    <h3 class="font-bold text-[14px]">صلاحية الوصول المتقدمة</h3>
                 </div>
                 <div class="p-5 flex flex-col gap-4">
-                    <p class="text-[12px] text-slate-600 font-bold">يرجى إدخال كلمة المرور لتفعيل وضع التحرير وعكس التحديثات على اللوحة الرئيسية (السحابة).</p>
+                    <p class="text-[12px] text-slate-600 font-bold">يرجى إدخال كلمة المرور لتفعيل التعديل أو المزامنة.</p>
                     <input type="password" id="passInput" placeholder="كلمة المرور..." class="w-full px-4 py-2 border border-slate-300 rounded-lg text-left focus:outline-none focus:border-[var(--gold-primary)] font-numbers text-lg" dir="ltr">
                     <div id="passError" class="text-red-500 text-[11px] font-bold hidden">كلمة المرور غير صحيحة!</div>
                     <div class="flex gap-2 mt-2">
@@ -605,16 +600,56 @@
         <!-- نافذة تعديل الرصيد الافتتاحي -->
         <div id="openBalanceModal" class="modal-overlay no-print" style="z-index: 60;">
             <div class="bg-white rounded-xl shadow-2xl border border-slate-200 w-[350px] overflow-hidden transform scale-100">
-                <div class="bg-[var(--gold-primary)] text-white px-5 py-3 flex items-center gap-2">
-                    <i class="fa-solid fa-pen-to-square"></i>
-                    <h3 class="font-bold text-[14px]">تعديل الرصيد الافتتاحي</h3>
+                <div class="bg-[var(--charcoal-900)] text-white px-5 py-3 flex items-center gap-2">
+                    <i class="fa-solid fa-pen-to-square text-[var(--gold-primary)]"></i>
+                    <h3 class="font-bold text-[14px]">تعديل الرصيد الافتتاحي الأساسي</h3>
                 </div>
                 <div class="p-5 flex flex-col gap-4">
-                    <p class="text-[12px] text-slate-600 font-bold">يرجى إدخال القيمة الجديدة للرصيد الافتتاحي للنقد:</p>
+                    <p class="text-[12px] text-slate-600 font-bold text-justify leading-relaxed">
+                        هذا هو الرصيد الكلي <span class="text-red-600">قبل</span> أول شهر مسجل في النظام. الأرصدة للأشهر التالية سيتم حسابها آلياً بناءً عليه.
+                    </p>
                     <input type="text" id="openBalanceInput" class="w-full px-4 py-2 border border-slate-300 rounded-lg text-left focus:outline-none focus:border-[var(--gold-primary)] font-numbers text-lg" dir="ltr" onfocus="this.value = window.parseFormatted(this.value); this.select();" onblur="this.value = window.formatCurr(window.parseFormatted(this.value));">
                     <div class="flex gap-2 mt-2">
-                        <button onclick="saveOpeningBalance()" class="flex-1 bg-[var(--success)] text-white py-2 rounded-lg text-[13px] font-bold hover:bg-green-700 transition-colors">حفظ التحديث</button>
+                        <button onclick="preSaveOpeningBalance()" class="flex-1 bg-[var(--gold-primary)] text-white py-2 rounded-lg text-[13px] font-bold hover:bg-[var(--gold-dark)] transition-colors">حفظ ومتابعة</button>
                         <button onclick="closeOpenBalanceModal()" class="flex-1 bg-slate-100 text-slate-600 py-2 rounded-lg text-[13px] font-bold hover:bg-slate-200 transition-colors">إلغاء</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- نافذة تأكيد الرصيد الافتتاحي الجديدة -->
+        <div id="confirmOpenBalModal" class="modal-overlay no-print" style="z-index: 60;">
+            <div class="bg-white rounded-xl shadow-2xl border border-slate-200 w-[350px] overflow-hidden transform scale-100">
+                <div class="bg-[var(--charcoal-900)] text-white px-5 py-3 flex items-center gap-2">
+                    <i class="fa-solid fa-cloud-arrow-up text-[var(--gold-primary)]"></i>
+                    <h3 class="font-bold text-[14px]">تأكيد الحفظ السحابي</h3>
+                </div>
+                <div class="p-5 flex flex-col gap-4">
+                    <p class="text-[13px] text-slate-600 font-bold text-center leading-relaxed">
+                        هل بالفعل تريد تعديل قيمة الرصيد الافتتاحي للنقد وتحديثه مباشرة في السحابة؟
+                    </p>
+                    <div class="flex gap-2 mt-2">
+                        <button onclick="confirmSaveOpeningBalance()" class="flex-1 bg-[var(--gold-primary)] text-white py-2 rounded-lg text-[13px] font-bold hover:bg-[var(--gold-dark)] transition-colors">موافق</button>
+                        <button onclick="cancelSaveOpeningBalance()" class="flex-1 bg-slate-100 text-slate-600 py-2 rounded-lg text-[13px] font-bold hover:bg-slate-200 transition-colors">إلغاء</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- نافذة تأكيد تغيير النطاق الزمني -->
+        <div id="confirmDateModal" class="modal-overlay no-print" style="z-index: 60;">
+            <div class="bg-white rounded-xl shadow-2xl border border-slate-200 w-[350px] overflow-hidden transform scale-100">
+                <div class="bg-[var(--charcoal-900)] text-white px-5 py-3 flex items-center gap-2">
+                    <i class="fa-solid fa-calendar-circle-exclamation text-[var(--gold-primary)]"></i>
+                    <h3 class="font-bold text-[14px]">تأكيد تغيير النطاق الزمني</h3>
+                </div>
+                <div class="p-5 flex flex-col gap-4">
+                    <p class="text-[13px] text-slate-600 font-bold text-center leading-relaxed">
+                        هل تريد بالفعل إظهار بيانات الفترة المحددة وتحديث السحابة؟
+                    </p>
+                    <div class="flex gap-2 mt-2">
+                        <button onclick="confirmDateChange()" class="flex-1 bg-[var(--gold-primary)] text-white py-2 rounded-lg text-[13px] font-bold hover:bg-[var(--gold-dark)] transition-colors">موافق</button>
+                        <button onclick="cancelDateChange()" class="flex-1 bg-slate-100 text-slate-600 py-2 rounded-lg text-[13px] font-bold hover:bg-slate-200 transition-colors">إلغاء</button>
                     </div>
                 </div>
             </div>
@@ -650,39 +685,45 @@
                 const passwordModal = document.getElementById('passwordModal');
                 const detailsModal = document.getElementById('detailsModal');
                 const openBalanceModal = document.getElementById('openBalanceModal');
+                const confirmDateModal = document.getElementById('confirmDateModal');
+                const confirmOpenBalModal = document.getElementById('confirmOpenBalModal');
                 
                 if (passwordModal.classList.contains('active')) window.closePasswordModal();
                 else if (openBalanceModal && openBalanceModal.classList.contains('active')) window.closeOpenBalanceModal();
+                else if (confirmOpenBalModal && confirmOpenBalModal.classList.contains('active')) window.cancelSaveOpeningBalance();
+                else if (confirmDateModal && confirmDateModal.classList.contains('active')) window.cancelDateChange();
                 else if (detailsModal.classList.contains('active')) window.closeDetails();
             }
         });
 
-        // قاعدة البيانات الموزونة رياضياً 100% للتطابق مع طلبات الإدارة التنفيذية بالهللة
+        // قاموس الأشهر لترجمة النصوص إلى تواريخ للمقارنة والفلاتر
+        const arMonthsMap = { 'يناير':0, 'فبراير':1, 'مارس':2, 'أبريل':3, 'مايو':4, 'يونيو':5, 'يوليو':6, 'أغسطس':7, 'سبتمبر':8, 'أكتوبر':9, 'نوفمبر':10, 'ديسمبر':11 };
+
         window.appState = {
-            version: 7, // تحديث آلي للسحابة (النسخة السابعة) لتعديل المسمى إلى قروض
             openBalance: 400000,
             dateStartStr: "16 Nov 2025",
             dateEndStr: "31 Mar 2026",
             titles: {
                 mainTitle: "قائمة التدفقات النقدية المباشرة",
-                subTitle: "تقرير شهري",
-                timeRange: "النطاق الزمني للتقرير",
-                card1: "الرصيد الافتتاحي للنقد",
-                card2: "إجمالي المقبوضات",
-                card3: "إجمالي المدفوعات",
-                card4: "صافي التغيير",
-                card5: "الرصيد النهائي",
-                secMain: "تحليل تفصيلي للحركة حسب نوع النشاط",
+                subTitle: "تقرير شهري (عرض حسب النطاق الزمني)",
+                timeRange: "النطاق الزمني المعروض",
+                card1: "رصيد بداية الفترة (تراكمي)",
+                card2: "إجمالي المقبوضات (للفترة)",
+                card3: "إجمالي المدفوعات (للفترة)",
+                card4: "صافي تغيير الفترة",
+                card5: "الرصيد النهائي (تراكمي)",
+                secMain: "تحليل تفصيلي للحركة حسب نوع النشاط للفترة المحددة",
                 secOpTitle: "الأنشطة التشغيلية",
                 secOpSub: "العمليات التشغيلية الأساسية",
                 secInvTitle: "الأنشطة الاستثمارية",
                 secInvSub: "الأصول الثابتة والمشاريع",
                 secFinTitle: "الأنشطة التمويلية",
                 secFinSub: "التمويل والقروض",
-                timelineTitle: "التتبع الزمني لمسار السيولة والأرصدة",
-                footerText: "قائمة التدفقات النقدية المباشرة",
+                timelineTitle: "التتبع الزمني لمسار السيولة والأرصدة (للفترة المعروضة)",
+                footerText: "قائمة التدفقات النقدية",
                 companyName: "شركة اتحاد الراجحي"
             },
+            // القائمة الشاملة لجميع الأشهر (المخفية والظاهرة)
             months: [
                 { key: 'nov', label: 'نوفمبر 25', name: 'نوفمبر', year: '2025' },
                 { key: 'dec', label: 'ديسمبر 25', name: 'ديسمبر', year: '2025' },
@@ -690,96 +731,102 @@
                 { key: 'feb', label: 'فبراير 26', name: 'فبراير', year: '2026' },
                 { key: 'mar', label: 'مارس 26', name: 'مارس', year: '2026' }
             ],
-            opRec: [
-                { id: 'or1', name: "تحصيلات من ايجارفندق الششة", nov: 0, dec: 0, jan: 0, feb: 2500000, mar: 0 },
-                { id: 'or2', name: "تحصيلات من ايجار مبنى الادارة", nov: 0, dec: 0, jan: 1037030, feb: 0, mar: 257400 },
-                { id: 'or3', name: "مدارس البنات", nov: 0, dec: 3891770, jan: 0, feb: 0, mar: 0 },
-                { id: 'or4', name: "مدارس البنين", nov: 0, dec: 1310954, jan: 0, feb: 0, mar: 0 },
-                { id: 'or5', name: "تحصيلات معارض عمائر البساتين بريدة", nov: 17500, dec: 0, jan: 232250, feb: 116500, mar: 84500 },
-                { id: 'or6', name: "تحصيلات من ايجارعمارة السلام", nov: 0, dec: 0, jan: 641198, feb: 0, mar: 59000 },
-                { id: 'or7', name: "تحصيلات من ايجار ارض الملقا", nov: 0, dec: 0, jan: 0, feb: 2375667.50, mar: 0 },
-                { id: 'or8', name: "تحصيلات من ايجار ارض المزروعية", nov: 0, dec: 1244548, jan: 0, feb: 0, mar: 0 },
-                { id: 'or9', name: "تحصيلات من ايجار ارض حائل", nov: 2011529, dec: 0, jan: 0, feb: 0, mar: 0 }
-            ],
-            opPay: [
-                { id: 'op1', name: "الرواتب", nov: 900000, dec: 900000, jan: 900000, feb: 900000, mar: 900000 },
-                { id: 'op2', name: "مصروفات التشغيل", nov: 623870.83, dec: 338870.83, jan: 637620.83, feb: 745120.84, mar: 873870.83 }, 
-                { id: 'op3', name: "مكافاة العاملين", nov: 0, dec: 0, jan: 0, feb: 0, mar: 3900000 },
-                { id: 'op4', name: "مكافاة أعضاء مجلس الإدارة", nov: 0, dec: 0, jan: 0, feb: 0, mar: 2500000 },
-                { id: 'op5', name: "التامين الطبي", nov: 0, dec: 0, jan: 1500000, feb: 0, mar: 0 },
-                { id: 'op6', name: "اتعاب تدقيق القوائم والمستشار الزكوى", nov: 0, dec: 150000, jan: 0, feb: 0, mar: 150000 },
-                { id: 'op7', name: "رحلات عمل وانتدابات", nov: 15000, dec: 15000, jan: 15000, feb: 15000, mar: 15000 },
-                { id: 'op8', name: "تدريب العاملين", nov: 60000, dec: 0, jan: 50000, feb: 0, mar: 0 },
-                { id: 'op9', name: "تامينات اجتماعية وتجديد اقامات", nov: 190000, dec: 190000, jan: 190000, feb: 190000, mar: 190000 },
-                { id: 'op10', name: "تذاكر العاملين", nov: 0, dec: 285000, jan: 0, feb: 0, mar: 0 },
-                { id: 'op11', name: "مكافاة المسوقين", nov: 20000, dec: 20000, jan: 20000, feb: 20000, mar: 20000 },
-                { id: 'op12', name: "عمولات وسعى البيع", nov: 0, dec: 350000, jan: 0, feb: 0, mar: 250000 },
-                { id: 'op13', name: "اتعاب استشارات", nov: 0, dec: 100000, jan: 0, feb: 0, mar: 0 },
-                { id: 'op14', name: "ضريبة قيمة مضافة", nov: 0, dec: 0, jan: 985350, feb: 0, mar: 832000 },
-                { id: 'op15', name: "ضريبة تطوير", nov: 0, dec: 0, jan: 3010000, feb: 0, mar: 3580000 },
-                { id: 'op16', name: "زكاة", nov: 0, dec: 0, jan: 0, feb: 0, mar: 4000000 },
-                { id: 'op17', name: "الزامل والخراشى", nov: 0, dec: 0, jan: 0, feb: 86250, mar: 0 },
-                { id: 'op18', name: "ERP الاتصال التالى", nov: 40000, dec: 0, jan: 0, feb: 0, mar: 0 },
-                { id: 'op19', name: "معارض ودعاية وإعلان", nov: 0, dec: 250000, jan: 0, feb: 0, mar: 0 }
-            ],
-            invRec: [
-                { id: 'ir1', name: "مبيعات حائل", nov: 5695908, dec: 5695908, jan: 2531514.6, feb: 2531514.6, mar: 2531514.6 },
-                { id: 'ir2', name: "مبيعات مساكن الروضة مجمع 4", nov: 1948838.4, dec: 1948838.4, jan: 1299225.6, feb: 1299225.6, mar: 1299225.6 },
-                { id: 'ir3', name: "مبيعات مساكن الروضة مجمع 7", nov: 2516135.4, dec: 2516135.4, jan: 1677423.6, feb: 1677423.6, mar: 1677423.6 },
-                { id: 'ir4', name: "مبيعات بساتين القصيم", nov: 655012.2, dec: 655012.2, jan: 655012.2, feb: 655012.2, mar: 655012.2 },
-                { id: 'ir5', name: "تحويلات من صندوق ارتال", nov: 0, dec: 3645315, jan: 4374379, feb: 3936941, mar: 3543246 }
-            ],
-            invPay: [
-                { id: 'ip1', name: "مشروع مساكن الروضة", nov: 1890000, dec: 1984500, jan: 1885275, feb: 1602483.75, mar: 1362111.19 },
-                { id: 'ip2', name: "النوايف", nov: 2340000, dec: 3042000, jan: 4258800, feb: 5536440, mar: 8304660 },
-                { id: 'ip3', name: "مسجد النوايف", nov: 275000, dec: 100000, jan: 0, feb: 0, mar: 250000 },
-                { id: 'ip4', name: "مدارس الروضة", nov: 3912066.09, dec: 4498876, jan: 4948763.6, feb: 5691078.14, mar: 3983754.7 },
-                { id: 'ip5', name: "مسار", nov: 229999, dec: 2700437.5, jan: 137812.5, feb: 154687.5, mar: 2582498.5 },
-                { id: 'ip6', name: "جاديت (استعاضة أرتال)", nov: 3375292.9, dec: 4050351.48, jan: 3645316.33, feb: 3280784.69, mar: 2952706.23 },
-                { id: 'ip7', name: "مخطط الغروب", nov: 142600, dec: 142600, jan: 4397654.33, feb: 1978944.45, mar: 2374733.34 },
-                { id: 'ip8', name: "مخطط الرابيه", nov: 247224.13, dec: 0, jan: 0, feb: 0, mar: 0 },
-                { id: 'ip9', name: "سداد باقى ارض كليات الغد", nov: 50000000, dec: 0, jan: 0, feb: 0, mar: 0 }
-            ],
-            finRec: [
-                { id: 'fr1', name: "تمويل مستلم", nov: 0, dec: 0, jan: 0, feb: 140000000.00, mar: 0 }
-            ],
-            finPay: [
-                { id: 'fp1', name: "قروض", nov: 0, dec: 140000000.00, jan: 0, feb: 0, mar: 0 }
-            ]
+            opRec: [ { id: 'or1', name: "تحصيلات افتراضية", nov: 10000, dec: 20000, jan: 0, feb: 0, mar: 0 } ],
+            opPay: [], invRec: [], invPay: [], finRec: [], finPay: []
         };
 
         window.currentActiveCategory = null;
         window.isEditMode = false;
         window.pendingAuthCallback = null;
 
-        window.saveToFirebase = async function() {
+        // متغيرات مؤقتة لتأكيد تغيير التاريخ
+        window.pendingDateType = null;
+        window.pendingDateValue = null;
+
+        // دالة الفلترة الديناميكية - تستخرج الأشهر المطلوبة فقط للعرض وتترك الباقي في الذاكرة
+        window.getVisibleMonths = function() {
+            const startDate = new Date(window.appState.dateStartStr);
+            const endDate = new Date(window.appState.dateEndStr);
+            
+            // ضبط للبداية والنهاية لضمان شمولية الشهر كامل
+            const sTime = new Date(startDate.getFullYear(), startDate.getMonth(), 1).getTime();
+            const eTime = new Date(endDate.getFullYear(), endDate.getMonth(), 28).getTime(); 
+
+            let visible = window.appState.months.filter(m => {
+                const mTime = new Date(parseInt(m.year), arMonthsMap[m.name], 1).getTime();
+                return mTime >= sTime && mTime <= eTime;
+            });
+
+            return visible.sort((a,b) => {
+                return new Date(parseInt(a.year), arMonthsMap[a.name], 1).getTime() - new Date(parseInt(b.year), arMonthsMap[b.name], 1).getTime();
+            });
+        }
+
+        // حساب الرصيد الافتتاحي التراكمي الدقيق لبداية الفترة المحددة
+        window.calculatePeriodOpeningBalance = function() {
+            let globalBal = window.appState.openBalance;
+            const startDate = new Date(window.appState.dateStartStr);
+            const sTime = new Date(startDate.getFullYear(), startDate.getMonth(), 1).getTime();
+
+            window.appState.months.forEach(m => {
+                const mTime = new Date(parseInt(m.year), arMonthsMap[m.name], 1).getTime();
+                // إذا كان الشهر يسبق تاريخ بداية العرض، نقوم بجمع تدفقاته وإضافتها للرصيد
+                if (mTime < sTime) {
+                    let netCash = 0;
+                    ['opRec', 'invRec', 'finRec'].forEach(cat => {
+                        netCash += window.appState[cat].reduce((sum, item) => sum + (parseFloat(item[m.key]) || 0), 0);
+                    });
+                    ['opPay', 'invPay', 'finPay'].forEach(cat => {
+                        netCash -= window.appState[cat].reduce((sum, item) => sum + (parseFloat(item[m.key]) || 0), 0);
+                    });
+                    globalBal += netCash;
+                }
+            });
+            return globalBal;
+        }
+
+        // حفظ صامت للسحابة لتجنب تكرار الكود
+        window.saveToCloudSilently = async function() {
             try {
                 const cloudStatus = document.getElementById('cloud-status');
-                if(cloudStatus) { cloudStatus.classList.remove('hidden'); cloudStatus.innerHTML = '<i class="fa-solid fa-spinner fa-spin ml-1"></i>جاري المزامنة...'; }
+                if(cloudStatus) { cloudStatus.classList.remove('hidden'); cloudStatus.innerHTML = '<i class="fa-solid fa-spinner fa-spin ml-1 text-blue-500"></i>جاري المزامنة...'; }
                 
                 await setDoc(doc(db, "reports", "executive_dashboard"), window.appState);
                 
                 if(cloudStatus) {
-                    cloudStatus.innerHTML = '<i class="fa-solid fa-cloud-arrow-up ml-1 text-[var(--success)]"></i>مزامنة ناجحة';
-                    setTimeout(() => cloudStatus.classList.add('hidden'), 3000);
+                    cloudStatus.innerHTML = '<i class="fa-solid fa-cloud-check ml-1 text-[var(--success)]"></i>تم الحفظ بنجاح';
+                    setTimeout(() => cloudStatus.innerHTML = '<i class="fa-solid fa-cloud text-slate-300 ml-1"></i>جاهز ومحدث', 4000);
                 }
             } catch (e) {
                 console.error("Firebase save error:", e);
+                alert("حدث خطأ أثناء الاتصال بقاعدة البيانات.");
+                throw e;
             }
+        }
+
+        // الحفظ اليدوي للسحابة
+        window.requestManualSync = function() {
+            window.requestAuth(async () => {
+                await window.saveToCloudSilently();
+                alert("تم حفظ جميع التحديثات والبيانات في السحابة بنجاح.");
+            });
         };
 
         window.loadFromFirebase = async function() {
             try {
+                const cloudStatus = document.getElementById('cloud-status');
+                if(cloudStatus) cloudStatus.innerHTML = '<i class="fa-solid fa-spinner fa-spin ml-1"></i>جاري التحميل...';
+
                 const docSnap = await getDoc(doc(db, "reports", "executive_dashboard"));
-                // نعتمد النسخة السابعة فوراً لضمان إزالة أي تعديلات سابقة واعتماد مسمى قروض
-                if (docSnap.exists() && docSnap.data().version === 7) {
+                if (docSnap.exists()) {
                     window.appState = docSnap.data();
+                    if(cloudStatus) cloudStatus.innerHTML = '<i class="fa-solid fa-cloud-arrow-down ml-1 text-emerald-500"></i>تم جلب البيانات';
                 } else {
-                    await window.saveToFirebase(); 
+                    if(cloudStatus) cloudStatus.innerHTML = '<i class="fa-solid fa-cloud text-slate-300 ml-1"></i>بيانات محلية افتراضية';
                 }
                 
-                if(window.fpStart) window.fpStart.setDate(window.appState.dateStartStr);
-                if(window.fpEnd) window.fpEnd.setDate(window.appState.dateEndStr);
+                if(window.fpStart) window.fpStart.setDate(window.appState.dateStartStr, false);
+                if(window.fpEnd) window.fpEnd.setDate(window.appState.dateEndStr, false);
                 document.getElementById('ui-date-start').innerText = window.appState.dateStartStr;
                 document.getElementById('ui-date-end').innerText = window.appState.dateEndStr;
                 
@@ -796,22 +843,16 @@
             try { await signInAnonymously(auth); } catch(e) { console.warn("Anon auth failed", e); }
 
             window.updateTitlesUI();
-            window.updateDashboard();
 
             window.fpStart = flatpickr("#date-start-input", {
                 dateFormat: "d M Y",
                 defaultDate: window.appState.dateStartStr,
                 disableMobile: true,
-                onOpen: function(selectedDates, dateStr, instance) {
-                    if (sessionStorage.getItem('isAuth') !== 'true') {
-                        instance.close();
-                        window.requestAuth(() => { instance.open(); });
-                    }
-                },
                 onChange: function(selectedDates, dateStr) {
-                    window.appState.dateStartStr = dateStr;
-                    document.getElementById('ui-date-start').innerText = dateStr;
-                    window.saveToFirebase();
+                    if (dateStr === window.appState.dateStartStr) return;
+                    window.pendingDateType = 'start';
+                    window.pendingDateValue = dateStr;
+                    document.getElementById('confirmDateModal').classList.add('active');
                 }
             });
             
@@ -819,23 +860,52 @@
                 dateFormat: "d M Y",
                 defaultDate: window.appState.dateEndStr,
                 disableMobile: true,
-                onOpen: function(selectedDates, dateStr, instance) {
-                    if (sessionStorage.getItem('isAuth') !== 'true') {
-                        instance.close();
-                        window.requestAuth(() => { instance.open(); });
-                    }
-                },
                 onChange: function(selectedDates, dateStr) {
-                    window.appState.dateEndStr = dateStr;
-                    document.getElementById('ui-date-end').innerText = dateStr;
-                    window.saveToFirebase();
+                    if (dateStr === window.appState.dateEndStr) return;
+                    window.pendingDateType = 'end';
+                    window.pendingDateValue = dateStr;
+                    document.getElementById('confirmDateModal').classList.add('active');
                 }
             });
 
             await window.loadFromFirebase();
         });
 
-        // دوال مساعدة لضمان التنسيق المحاسبي الدقيق مع الأقواس للقيم السالبة
+        // دوال نافذة تأكيد التاريخ المضافة حديثاً
+        window.confirmDateChange = async function() {
+            if (window.pendingDateType === 'start') {
+                window.appState.dateStartStr = window.pendingDateValue;
+                document.getElementById('ui-date-start').innerText = window.pendingDateValue;
+            } else if (window.pendingDateType === 'end') {
+                window.appState.dateEndStr = window.pendingDateValue;
+                document.getElementById('ui-date-end').innerText = window.pendingDateValue;
+            }
+
+            document.getElementById('confirmDateModal').classList.remove('active');
+            window.updateDashboard();
+            
+            // حفظ سحابي مباشر بدون طلب الباسورد كما طلبت
+            await window.saveToCloudSilently();
+            
+            window.pendingDateType = null;
+            window.pendingDateValue = null;
+        };
+
+        window.cancelDateChange = function() {
+            document.getElementById('confirmDateModal').classList.remove('active');
+            
+            // إعادة الفلاتبيكر لتاريخه القديم دون تفعيل onChange مرة أخرى
+            if (window.pendingDateType === 'start') {
+                window.fpStart.setDate(window.appState.dateStartStr, false);
+            } else if (window.pendingDateType === 'end') {
+                window.fpEnd.setDate(window.appState.dateEndStr, false);
+            }
+            
+            window.pendingDateType = null;
+            window.pendingDateValue = null;
+        };
+
+        // دوال مساعدة للتنسيق
         window.formatCurr = function(num) {
             const formatted = new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Math.abs(num));
             return num < 0 ? `-${formatted}` : formatted;
@@ -847,23 +917,19 @@
             let num = parseFloat(str.replace(/[^0-9.]/g, '')) || 0;
             return isNegative ? -num : num;
         }
-        window.getItemTotal = function(item) {
-            return window.appState.months.reduce((sum, m) => sum + (parseFloat(item[m.key]) || 0), 0);
+        
+        // يعتمد الحساب الآن على الأشهر المرئية فقط
+        window.getItemTotalVisible = function(item, visibleMonths) {
+            return visibleMonths.reduce((sum, m) => sum + (parseFloat(item[m.key]) || 0), 0);
         }
-        window.sumArray = function(arr) {
-            return arr.reduce((acc, curr) => acc + window.getItemTotal(curr), 0);
+        window.sumArrayVisible = function(arr, visibleMonths) {
+            return arr.reduce((acc, curr) => acc + window.getItemTotalVisible(curr, visibleMonths), 0);
         }
 
         window.updateTitlesUI = function() {
             for (const key in window.appState.titles) {
                 const el = document.getElementById('text_' + key);
                 if (el) el.innerText = window.appState.titles[key];
-            }
-            if(window.appState.months.length > 0) {
-                const finalTitleEl = document.getElementById('ui-final-title');
-                if (finalTitleEl) {
-                    finalTitleEl.innerHTML = `<span id="text_card5">${window.appState.titles.card5}</span>`;
-                }
             }
         }
 
@@ -876,12 +942,15 @@
         }
 
         window.updateDashboard = function() {
-            const sumOpRec = window.sumArray(window.appState.opRec);
-            const sumOpPay = window.sumArray(window.appState.opPay);
-            const sumInvRec = window.sumArray(window.appState.invRec);
-            const sumInvPay = window.sumArray(window.appState.invPay);
-            const sumFinRec = window.sumArray(window.appState.finRec);
-            const sumFinPay = window.sumArray(window.appState.finPay);
+            const visibleMonths = window.getVisibleMonths();
+            const periodOpenBal = window.calculatePeriodOpeningBalance();
+
+            const sumOpRec = window.sumArrayVisible(window.appState.opRec, visibleMonths);
+            const sumOpPay = window.sumArrayVisible(window.appState.opPay, visibleMonths);
+            const sumInvRec = window.sumArrayVisible(window.appState.invRec, visibleMonths);
+            const sumInvPay = window.sumArrayVisible(window.appState.invPay, visibleMonths);
+            const sumFinRec = window.sumArrayVisible(window.appState.finRec, visibleMonths);
+            const sumFinPay = window.sumArrayVisible(window.appState.finPay, visibleMonths);
 
             document.getElementById('ui-op-rec').innerText = window.formatCurr(sumOpRec);
             document.getElementById('ui-op-pay').innerText = window.formatCurr(sumOpPay === 0 ? 0 : -sumOpPay);
@@ -895,34 +964,35 @@
             document.getElementById('ui-fin-pay').innerText = window.formatCurr(sumFinPay === 0 ? 0 : -sumFinPay);
             window.updateColor('ui-fin-net', sumFinRec - sumFinPay, 'text-[var(--charcoal-900)]');
 
-            // تجميع كل الأنشطة في النقد الداخل والخارج
             const totalIn = sumOpRec + sumInvRec + sumFinRec;
             const totalOut = sumOpPay + sumInvPay + sumFinPay;
             const netChange = totalIn - totalOut; 
-            const finalBalance = window.appState.openBalance + netChange;
+            const finalBalance = periodOpenBal + netChange;
 
-            document.getElementById('ui-open-balance').innerText = window.formatCurr(window.appState.openBalance);
+            document.getElementById('ui-open-balance').innerText = window.formatCurr(periodOpenBal);
             document.getElementById('ui-total-in').innerText = window.formatCurr(totalIn);
             document.getElementById('ui-total-out').innerText = window.formatCurr(totalOut === 0 ? 0 : -totalOut);
             window.updateColor('ui-net-change', netChange, 'text-[var(--charcoal-900)]');
             document.getElementById('ui-final-balance').innerText = window.formatCurr(finalBalance);
 
-            window.renderTimeline();
+            window.renderTimeline(visibleMonths, periodOpenBal);
         }
 
-        // رسم خط التتبع الزمني السفلي بشكله الأنيق والمبسط
-        window.renderTimeline = function() {
+        window.renderTimeline = function(visibleMonths, startBalance) {
             const tlContainer = document.getElementById('timeline-container');
             tlContainer.innerHTML = '';
             
-            if(window.appState.months.length === 0) return;
+            if(visibleMonths.length === 0) {
+                tlContainer.innerHTML = '<div class="w-full text-center py-10 text-slate-400 font-bold">لا توجد أشهر ضمن النطاق الزمني المحدد للعرض.</div>';
+                return;
+            }
 
             tlContainer.innerHTML += `<div class="absolute top-[31px] left-[40px] right-[40px] border-t-[3px] border-dashed border-slate-300 -z-10"></div>`;
 
-            let currentBalance = window.appState.openBalance;
+            let currentBalance = startBalance;
 
-            window.appState.months.forEach((m, idx) => {
-                const isLast = idx === window.appState.months.length - 1;
+            visibleMonths.forEach((m, idx) => {
+                const isLast = idx === visibleMonths.length - 1;
                 
                 let netCash = 0;
                 ['opRec', 'invRec', 'finRec'].forEach(cat => {
@@ -945,11 +1015,11 @@
                             <div class="absolute top-0 left-0 right-0 ${isLast ? 'h-1.5 bg-[var(--gold-primary)]' : 'h-1 bg-slate-200 group-hover:bg-[var(--gold-primary)] transition-colors'} rounded-t-xl"></div>
                             <div class="flex flex-col gap-1.5 mt-1">
                                 <div class="flex flex-col items-center bg-slate-50 py-1.5 px-1 rounded-lg border border-slate-100">
-                                    <span class="text-[10px] text-slate-500 font-bold mb-0.5">صافي النقد</span>
+                                    <span class="text-[10px] text-slate-500 font-bold mb-0.5">صافي حركة الشهر</span>
                                     <span class="font-numbers font-black text-[12px] ${netColor} tracking-tighter" dir="ltr">${window.formatCurr(netCash)}</span>
                                 </div>
                                 <div class="flex flex-col items-center ${isLast ? 'bg-[var(--gold-primary)]/10 py-1.5 px-1 rounded-lg border border-[var(--gold-primary)]/30' : 'bg-slate-50 py-1.5 px-1 rounded-lg border border-slate-100'}">
-                                    <span class="text-[10px] ${isLast ? 'text-[var(--gold-dark)]' : 'text-slate-500'} font-bold mb-0.5">الرصيد النهائي</span>
+                                    <span class="text-[10px] ${isLast ? 'text-[var(--gold-dark)]' : 'text-slate-500'} font-bold mb-0.5">الرصيد التراكمي بنهايته</span>
                                     <span class="font-numbers font-black text-[12px] ${isLast ? 'text-[var(--gold-dark)]' : 'text-[var(--charcoal-900)]'}" dir="ltr">${window.formatCurr(currentBalance)}</span>
                                 </div>
                             </div>
@@ -967,8 +1037,9 @@
             document.getElementById('saveBtn').classList.add('hidden');
             document.getElementById('editActionButtons').classList.add('hidden');
             
-            window.renderGridHeader();
-            window.renderDetailsList();
+            const visibleMonths = window.getVisibleMonths();
+            window.renderGridHeader(visibleMonths);
+            window.renderDetailsList(visibleMonths);
             document.getElementById('detailsModal').classList.add('active');
         }
 
@@ -977,11 +1048,13 @@
             if (window.isEditMode) window.updateDashboard(); 
         }
 
-        window.renderGridHeader = function() {
+        window.renderGridHeader = function(visibleMonths) {
             const header = document.getElementById('gridHeader');
             const wrapper = document.getElementById('gridWrapper');
-            const colCount = window.appState.months.length;
+            const colCount = visibleMonths.length;
             
+            if(colCount === 0) { header.innerHTML = ''; return; }
+
             const minWidth = window.isEditMode ? 400 + (colCount * 130) : 350 + (colCount * 110);
             wrapper.style.minWidth = `${Math.max(minWidth, 1000)}px`;
 
@@ -996,43 +1069,43 @@
             if (window.isEditMode) html += `<div class="min-w-0 shrink-0"></div>`; 
             html += `<div class="text-[13px] font-black text-slate-700 text-right pr-2 min-w-0 truncate">البيان</div>`;
             
-            window.appState.months.forEach(m => {
+            visibleMonths.forEach(m => {
                 html += `
                     <div class="text-[12px] font-black text-slate-600 relative group flex justify-center items-center gap-1.5 min-w-0">
                         <span class="truncate">${m.name} ${m.year.slice(-2)}</span>
-                        ${window.isEditMode ? `<button onclick="deleteMonth('${m.key}')" class="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 rounded w-5 h-5 flex items-center justify-center shrink-0 transition-colors" title="حذف الشهر"><i class="fa-solid fa-trash-can text-[10px]"></i></button>` : ''}
                     </div>
                 `;
             });
             
-            html += `<div class="text-[13px] font-black text-[var(--gold-dark)] bg-[var(--gold-primary)]/10 py-1 rounded min-w-0 truncate">الإجمالي للبنــد</div>`;
+            html += `<div class="text-[13px] font-black text-[var(--gold-dark)] bg-[var(--gold-primary)]/10 py-1 rounded min-w-0 truncate">الإجمالي المعروض</div>`;
             if (window.isEditMode) html += `<div class="min-w-0 shrink-0"></div>`; 
 
             header.innerHTML = html;
         }
 
-        // محاذاة الأرقام اليمنى (Right-Aligned in LTR) بدقة صارمة في القوائم باستخدام حاويات ثابتة
-        window.renderDetailsList = function() {
+        window.renderDetailsList = function(visibleMonths) {
             const listContainer = document.getElementById('detailsList');
             listContainer.innerHTML = '';
             
+            if(visibleMonths.length === 0) return;
+
             let total = 0;
             let monthTotals = {};
-            window.appState.months.forEach(m => monthTotals[m.key] = 0);
+            visibleMonths.forEach(m => monthTotals[m.key] = 0);
 
             const isExpense = ['opPay', 'invPay', 'finPay'].includes(window.currentActiveCategory);
             const arr = window.appState[window.currentActiveCategory];
-            const colCount = window.appState.months.length;
+            const colCount = visibleMonths.length;
 
             const gridCols = window.isEditMode
                 ? `40px 3fr repeat(${colCount}, 1.5fr) 1.5fr 40px`
                 : `3fr repeat(${colCount}, 1.5fr) 1.5fr`;
 
             arr.forEach((item, index) => {
-                const itemTotal = window.getItemTotal(item);
+                const itemTotal = window.getItemTotalVisible(item, visibleMonths);
                 total += itemTotal;
                 
-                window.appState.months.forEach(m => {
+                visibleMonths.forEach(m => {
                     monthTotals[m.key] += (parseFloat(item[m.key]) || 0);
                 });
 
@@ -1043,7 +1116,7 @@
                 let innerHTML = '';
                 if (!window.isEditMode) {
                     innerHTML += `<div class="text-[13px] font-bold text-slate-700 text-right pr-2 truncate min-w-0" title="${item.name}">${item.name}</div>`;
-                    window.appState.months.forEach(m => {
+                    visibleMonths.forEach(m => {
                         let val = item[m.key] || 0;
                         let displayVal = (isExpense && val !== 0) ? -Math.abs(val) : val;
                         let colorClass = displayVal < 0 ? 'text-[var(--danger)]' : 'text-slate-600';
@@ -1074,7 +1147,7 @@
                         </div>
                     `;
                     
-                    window.appState.months.forEach(m => {
+                    visibleMonths.forEach(m => {
                         let val = item[m.key] || 0;
                         let displayVal = (isExpense && val !== 0) ? -Math.abs(val) : val;
                         innerHTML += `
@@ -1108,7 +1181,6 @@
                 listContainer.appendChild(row);
             });
 
-            // صف المجاميع الشهرية مع المحاذاة اليمنى الصارمة
             const totalRow = document.createElement('div');
             totalRow.className = `grid-matrix w-full bg-[var(--gold-primary)]/10 border border-[var(--gold-primary)]/30 rounded-lg p-2 mt-2 items-center`;
             totalRow.style.gridTemplateColumns = gridCols;
@@ -1116,7 +1188,7 @@
             let totalHtml = '';
             if (!window.isEditMode) {
                 totalHtml += `<div class="text-[13px] font-black text-[var(--gold-dark)] text-right pr-2 min-w-0">الإجمالي الشهري</div>`;
-                window.appState.months.forEach(m => {
+                visibleMonths.forEach(m => {
                     let mTotal = monthTotals[m.key];
                     let displayMTotal = (isExpense && mTotal !== 0) ? -Math.abs(mTotal) : mTotal;
                     let colorClass = displayMTotal < 0 ? 'text-[var(--danger)]' : 'text-[var(--charcoal-900)]';
@@ -1141,7 +1213,7 @@
                     <div class="min-w-0 shrink-0"></div>
                     <div class="text-[13px] font-black text-[var(--gold-dark)] text-right pr-2 min-w-0 w-full" style="padding-right: 8px;">الإجمالي الشهري</div>
                 `;
-                window.appState.months.forEach(m => {
+                visibleMonths.forEach(m => {
                     let mTotal = monthTotals[m.key];
                     let displayMTotal = (isExpense && mTotal !== 0) ? -Math.abs(mTotal) : mTotal;
                     let colorClass = displayMTotal < 0 ? 'text-[var(--danger)]' : 'text-[var(--charcoal-900)]';
@@ -1178,47 +1250,14 @@
             if (isExpense) parsed = Math.abs(parsed); // Always store as positive
             
             window.appState[window.currentActiveCategory][index][monthKey] = parsed;
-            
-            const rowTotal = window.getItemTotal(window.appState[window.currentActiveCategory][index]);
-            let displayRowTotal = (isExpense && rowTotal !== 0) ? -Math.abs(rowTotal) : rowTotal;
-            const rowTotalElem = document.getElementById(`row-total-${index}`);
-            if(rowTotalElem) {
-                rowTotalElem.innerText = window.formatCurr(displayRowTotal);
-                rowTotalElem.classList.remove('text-[var(--danger)]', 'text-[var(--charcoal-900)]');
-                rowTotalElem.classList.add(displayRowTotal < 0 ? 'text-[var(--danger)]' : 'text-[var(--charcoal-900)]');
-            }
-
-            let newMonthTotal = 0;
-            window.appState[window.currentActiveCategory].forEach(item => {
-                newMonthTotal += (parseFloat(item[monthKey]) || 0);
-            });
-            let displayMTotal = (isExpense && newMonthTotal !== 0) ? -Math.abs(newMonthTotal) : newMonthTotal;
-            const monthTotalElem = document.getElementById(`month-total-${monthKey}`);
-            if(monthTotalElem) {
-                monthTotalElem.innerText = window.formatCurr(displayMTotal);
-                monthTotalElem.classList.remove('text-[var(--danger)]', 'text-[var(--charcoal-900)]');
-                monthTotalElem.classList.add(displayMTotal < 0 ? 'text-[var(--danger)]' : 'text-[var(--charcoal-900)]');
-            }
-
-            const modalTotal = window.sumArray(window.appState[window.currentActiveCategory]);
-            let displayModalTotal = (isExpense && modalTotal !== 0) ? -Math.abs(modalTotal) : modalTotal;
-            
-            const modalTotalElem = document.getElementById('modalTotal');
-            if(modalTotalElem) {
-                modalTotalElem.innerText = window.formatCurr(displayModalTotal);
-                modalTotalElem.style.color = displayModalTotal < 0 ? 'var(--danger)' : 'var(--gold-dark)';
-            }
-            
-            const rowGrandTotalElem = document.getElementById(`row-grand-total`);
-            if(rowGrandTotalElem) {
-                rowGrandTotalElem.innerText = window.formatCurr(displayModalTotal);
-                rowGrandTotalElem.classList.remove('text-[var(--danger)]', 'text-[var(--gold-dark)]');
-                rowGrandTotalElem.classList.add(displayModalTotal < 0 ? 'text-[var(--danger)]' : 'text-[var(--gold-dark)]');
-            }
+            document.getElementById('cloud-status').innerHTML = '<i class="fa-solid fa-triangle-exclamation text-orange-400 ml-1"></i>توجد تغييرات غير محفوظة';
+            // تحديث مجاميع الواجهة محلياً
+            window.renderDetailsList(window.getVisibleMonths());
         }
 
         window.updateRowField = function(index, field, val) {
             if (field === 'name') window.appState[window.currentActiveCategory][index][field] = val;
+            document.getElementById('cloud-status').innerHTML = '<i class="fa-solid fa-triangle-exclamation text-orange-400 ml-1"></i>توجد تغييرات غير محفوظة';
         }
 
         window.moveRow = function(index, direction) {
@@ -1226,21 +1265,24 @@
             const temp = arr[index];
             arr[index] = arr[index + direction];
             arr[index + direction] = temp;
-            window.renderDetailsList();
+            window.renderDetailsList(window.getVisibleMonths());
+            document.getElementById('cloud-status').innerHTML = '<i class="fa-solid fa-triangle-exclamation text-orange-400 ml-1"></i>توجد تغييرات غير محفوظة';
         }
 
         window.deleteRow = function(index) {
             window.appState[window.currentActiveCategory].splice(index, 1);
-            window.renderDetailsList();
+            window.renderDetailsList(window.getVisibleMonths());
+            document.getElementById('cloud-status').innerHTML = '<i class="fa-solid fa-triangle-exclamation text-orange-400 ml-1"></i>توجد تغييرات غير محفوظة';
         }
 
         window.addNewRow = function() {
             const newItem = { id: 'new_' + Math.random().toString(36).substr(2, 9), name: "بند إضافي جديد" };
             window.appState.months.forEach(m => newItem[m.key] = 0);
             window.appState[window.currentActiveCategory].push(newItem);
-            window.renderDetailsList();
+            window.renderDetailsList(window.getVisibleMonths());
             const container = document.getElementById('detailsList').parentElement;
             setTimeout(() => container.scrollTop = container.scrollHeight, 100);
+            document.getElementById('cloud-status').innerHTML = '<i class="fa-solid fa-triangle-exclamation text-orange-400 ml-1"></i>توجد تغييرات غير محفوظة';
         }
 
         window.addMonth = function() {
@@ -1256,26 +1298,14 @@
                 window.appState[cat].forEach(item => { item[mKey] = 0; });
             });
 
-            window.renderGridHeader();
-            window.renderDetailsList();
+            const visibleMonths = window.getVisibleMonths();
+            window.renderGridHeader(visibleMonths);
+            window.renderDetailsList(visibleMonths);
+            window.updateDashboard();
             
             const container = document.getElementById('gridWrapper').parentElement;
             setTimeout(() => container.scrollLeft = -container.scrollWidth, 100);
-            window.updateTitlesUI();
-        }
-
-        window.deleteMonth = function(mKey) {
-            if(window.appState.months.length <= 1) { alert("لا يمكنك حذف جميع الأشهر!"); return; }
-            if(!confirm("هل أنت متأكد من حذف هذا الشهر بالكامل ومسح جميع بياناته من الميزانية؟")) return;
-
-            window.appState.months = window.appState.months.filter(m => m.key !== mKey);
-            ['opRec', 'opPay', 'invRec', 'invPay', 'finRec', 'finPay'].forEach(cat => {
-                window.appState[cat].forEach(item => { delete item[mKey]; });
-            });
-
-            window.renderGridHeader();
-            window.renderDetailsList();
-            window.updateTitlesUI();
+            document.getElementById('cloud-status').innerHTML = '<i class="fa-solid fa-triangle-exclamation text-orange-400 ml-1"></i>توجد تغييرات غير محفوظة';
         }
 
         window.requestAuth = function(callback) {
@@ -1291,7 +1321,15 @@
         }
 
         window.requestEditMode = function() {
-            window.requestAuth(() => { window.enableEditMode(); });
+            window.requestAuth(() => { 
+                window.isEditMode = true;
+                document.getElementById('editBtn').classList.add('hidden');
+                document.getElementById('saveBtn').classList.remove('hidden');
+                document.getElementById('editActionButtons').classList.remove('hidden');
+                const v = window.getVisibleMonths();
+                window.renderGridHeader(v);
+                window.renderDetailsList(v);
+            });
         }
 
         window.closePasswordModal = function() {
@@ -1310,22 +1348,6 @@
             }
         }
 
-        window.enableEditMode = function() {
-            window.isEditMode = true;
-            document.getElementById('editBtn').classList.add('hidden');
-            document.getElementById('saveBtn').classList.remove('hidden');
-            document.getElementById('editActionButtons').classList.remove('hidden');
-            window.renderGridHeader();
-            window.renderDetailsList();
-        }
-
-        window.saveChanges = function() {
-            window.updateDashboard();
-            window.closeDetails();
-            window.saveToFirebase(); 
-        }
-
-        // --- دوال تعديل الرصيد الافتتاحي الجديدة ---
         window.editOpeningBalance = function() {
             window.requestAuth(() => {
                 const input = document.getElementById('openBalanceInput');
@@ -1339,17 +1361,97 @@
             document.getElementById('openBalanceModal').classList.remove('active');
         }
 
-        window.saveOpeningBalance = function() {
+        // التعديل الجديد: طلب التأكيد قبل الحفظ السحابي
+        window.pendingOpenBalanceValue = null;
+
+        window.preSaveOpeningBalance = function() {
             const val = window.parseFormatted(document.getElementById('openBalanceInput').value);
             if (!isNaN(val)) {
-                window.appState.openBalance = val;
-                window.appState.version = 7; // رفع النسخة لضمان المزامنة واعتماد التعديل الجديد
-                window.updateDashboard();
+                window.pendingOpenBalanceValue = val;
                 window.closeOpenBalanceModal();
-                window.saveToFirebase();
+                document.getElementById('confirmOpenBalModal').classList.add('active');
             } else {
                 alert("يرجى إدخال رقم صحيح.");
             }
+        }
+
+        window.confirmSaveOpeningBalance = async function() {
+            if (window.pendingOpenBalanceValue !== null) {
+                window.appState.openBalance = window.pendingOpenBalanceValue;
+                window.updateDashboard();
+                document.getElementById('confirmOpenBalModal').classList.remove('active');
+                
+                // حفظ سحابي مباشر
+                await window.saveToCloudSilently();
+                
+                window.pendingOpenBalanceValue = null;
+            }
+        }
+
+        window.cancelSaveOpeningBalance = function() {
+            document.getElementById('confirmOpenBalModal').classList.remove('active');
+            window.pendingOpenBalanceValue = null;
+        }
+
+        // ===============================================
+        // منطق قراءة بيانات الإكسل واستخلاصها الذكي
+        // ===============================================
+        window.handleExcelImport = function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            window.requestAuth(() => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, {type: 'array'});
+                        const firstSheetName = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[firstSheetName];
+                        // قراءة الشيت كمنظومة من الكائنات (JSON)
+                        const json = XLSX.utils.sheet_to_json(worksheet);
+
+                        let updatedCount = 0;
+
+                        // الدوران على كل صف مستخرج من الإكسل
+                        json.forEach(row => {
+                            const itemName = row["البيان"] || row["البند"] || row["Name"];
+                            if (!itemName) return; // تخطي إذا لم يوجد اسم للبند
+
+                            // البحث عن البند في جميع تصنيفات النظام
+                            let matchedItem = null;
+                            const categories = ['opRec', 'opPay', 'invRec', 'invPay', 'finRec', 'finPay'];
+                            categories.forEach(cat => {
+                                const found = window.appState[cat].find(i => i.name.trim() === itemName.trim());
+                                if (found) matchedItem = found;
+                            });
+
+                            if (matchedItem) {
+                                // البند موجود، نبحث عن قيم الأشهر المتطابقة
+                                window.appState.months.forEach(m => {
+                                    // إذا كان الإكسل يحتوي على عمود مطابق لاسم الشهر (مثل: "نوفمبر 25" أو "نوفمبر 2025")
+                                    const mKeyExcel = row[m.label] || row[`${m.name} ${m.year}`];
+                                    if (mKeyExcel !== undefined) {
+                                        matchedItem[m.key] = Math.abs(parseFloat(mKeyExcel) || 0);
+                                        updatedCount++;
+                                    }
+                                });
+                            }
+                        });
+
+                        alert(`تمت المعاينة بنجاح.\nتم تحديث قيم ${updatedCount} إدخال شهري للبنود المطابقة.\n\nتنبيه: راجع اللوحة، ثم اضغط (حفظ ومزامنة في السحابة) لاعتمادها.`);
+                        
+                        document.getElementById('excelInput').value = ''; // تصفير الرفع
+                        window.updateDashboard(); // تحديث اللوحة بالبيانات الجديدة المستوردة
+                        document.getElementById('cloud-status').innerHTML = '<i class="fa-solid fa-triangle-exclamation text-orange-400 ml-1"></i>بانتظار مزامنة المستورد';
+
+                    } catch(error) {
+                        console.error(error);
+                        alert("حدث خطأ أثناء محاولة قراءة الملف. يرجى التأكد من أن الملف بصيغة إكسل صحيحة (XLSX).");
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+            });
         }
 
         // مستمعات لوحة المفاتيح
@@ -1357,7 +1459,7 @@
             if (e.key === 'Enter') window.verifyPassword();
         });
         document.getElementById('openBalanceInput').addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') window.saveOpeningBalance();
+            if (e.key === 'Enter') window.preSaveOpeningBalance();
         });
 
     </script>
