@@ -218,6 +218,9 @@
                 position: absolute !important; top: 0 !important; left: 0 !important;
                 transform: scale(1) !important; page-break-inside: avoid;
             }
+            body.print-no-bg #main-content {
+                background-color: #FFFFFF !important;
+            }
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
             .no-print { display: none !important; }
             .executive-card { transform: none !important; box-shadow: none !important; }
@@ -283,7 +286,7 @@
                     <div class="relative flex flex-col items-center bg-slate-50 px-3 py-0.5 rounded border border-slate-200 hover:border-[var(--gold-primary)] transition-colors cursor-pointer group/date shadow-sm hover:shadow">
                         <input type="text" id="date-start-input" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20">
                         <div class="flex items-center gap-1 z-10 pointer-events-none">
-                            <span id="ui-date-start" class="font-numbers text-[13px] font-black text-[var(--charcoal-800)] transition-colors" dir="ltr">16 Nov 2025</span>
+                            <span id="ui-date-start" class="font-numbers text-[13px] font-black text-[var(--charcoal-800)] transition-colors" dir="ltr">-- --- ----</span>
                         </div>
                     </div>
 
@@ -294,7 +297,7 @@
                     <div class="relative flex flex-col items-center bg-[var(--gold-primary)]/10 px-3 py-0.5 rounded border border-[var(--gold-primary)]/30 hover:bg-[var(--gold-primary)]/20 transition-colors cursor-pointer group/date shadow-sm hover:shadow">
                         <input type="text" id="date-end-input" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20">
                         <div class="flex items-center gap-1 z-10 pointer-events-none">
-                            <span id="ui-date-end" class="font-numbers text-[13px] font-black text-[var(--gold-dark)] transition-colors" dir="ltr">31 Mar 2026</span>
+                            <span id="ui-date-end" class="font-numbers text-[13px] font-black text-[var(--gold-dark)] transition-colors" dir="ltr">-- --- ----</span>
                         </div>
                     </div>
                 </div>
@@ -302,7 +305,7 @@
         </header>
 
         <!-- المحتوى الرئيسي -->
-        <main class="flex-1 min-h-0 overflow-hidden flex flex-col w-full px-10 py-4 gap-4 bg-slate-50">
+        <main id="main-content" class="flex-1 min-h-0 overflow-hidden flex flex-col w-full px-10 py-4 gap-4 bg-slate-50">
             
             <!-- القسم الأول: المؤشرات الخمسة الرئيسية -->
             <div class="grid grid-cols-5 gap-5 shrink-0 min-h-[105px]">
@@ -317,12 +320,14 @@
                         <div class="icon-box icon-unified"><i class="fa-solid fa-door-open"></i></div>
                     </div>
                     <div class="flex items-baseline gap-1.5 mt-auto">
-                        <span id="ui-open-balance" class="text-[22px] font-black text-[var(--charcoal-900)] font-numbers dir-ltr tracking-tight">400,000</span>
+                        <span id="ui-open-balance" class="text-[22px] font-black text-[var(--charcoal-900)] font-numbers dir-ltr tracking-tight">
+                            <i class="fa-solid fa-ellipsis fa-fade text-slate-300 text-[18px]"></i>
+                        </span>
                         <span class="text-[12px] font-bold text-slate-400">ريال</span>
                     </div>
                     <!-- Tooltip لتوضيح الحسبة التراكمية -->
                     <div class="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-[var(--charcoal-900)] text-white text-[10px] px-3 py-1.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                        يتم حسابه آلياً بناءً على الرصيد الأساسي وأرصدة الأشهر السابقة للتاريخ المحدد.
+                        هذا هو: (الرصيد الأساسي) + (التدفقات للأشهر السابقة للنطاق المحدد).
                     </div>
                 </div>
 
@@ -334,7 +339,9 @@
                         <div class="icon-box icon-unified"><i class="fa-solid fa-arrow-trend-up"></i></div>
                     </div>
                     <div class="flex items-baseline gap-1.5 mt-auto">
-                        <span id="ui-total-in" class="text-[22px] font-black text-[var(--charcoal-900)] font-numbers dir-ltr tracking-tight">0.00</span>
+                        <span id="ui-total-in" class="text-[22px] font-black text-[var(--charcoal-900)] font-numbers dir-ltr tracking-tight">
+                            <i class="fa-solid fa-ellipsis fa-fade text-slate-300 text-[18px]"></i>
+                        </span>
                         <span class="text-[12px] font-bold text-slate-400">ريال</span>
                     </div>
                 </div>
@@ -347,7 +354,9 @@
                         <div class="icon-box icon-unified"><i class="fa-solid fa-arrow-trend-down"></i></div>
                     </div>
                     <div class="flex items-baseline gap-1.5 mt-auto">
-                        <span id="ui-total-out" class="text-[22px] font-black text-[var(--danger)] font-numbers tracking-tight" dir="ltr">0.00</span>
+                        <span id="ui-total-out" class="text-[22px] font-black text-[var(--danger)] font-numbers tracking-tight" dir="ltr">
+                            <i class="fa-solid fa-ellipsis fa-fade text-slate-300 text-[18px]"></i>
+                        </span>
                         <span class="text-[12px] font-bold text-slate-400">ريال</span>
                     </div>
                 </div>
@@ -360,7 +369,9 @@
                         <div class="icon-box icon-unified"><i class="fa-solid fa-scale-unbalanced"></i></div>
                     </div>
                     <div class="flex items-baseline gap-1.5 mt-auto">
-                        <span id="ui-net-change" class="text-[22px] font-black text-[var(--danger)] font-numbers tracking-tight" dir="ltr">0.00</span>
+                        <span id="ui-net-change" class="text-[22px] font-black text-[var(--danger)] font-numbers tracking-tight" dir="ltr">
+                            <i class="fa-solid fa-ellipsis fa-fade text-slate-300 text-[18px]"></i>
+                        </span>
                         <span class="text-[12px] font-bold text-slate-400">ريال</span>
                     </div>
                 </div>
@@ -373,7 +384,9 @@
                         <div class="icon-box icon-unified"><i class="fa-solid fa-flag-checkered"></i></div>
                     </div>
                     <div class="flex items-baseline gap-1.5 mt-auto">
-                        <span id="ui-final-balance" class="text-[22px] font-black text-[var(--gold-dark)] font-numbers dir-ltr tracking-tight">0.00</span>
+                        <span id="ui-final-balance" class="text-[22px] font-black text-[var(--gold-dark)] font-numbers dir-ltr tracking-tight">
+                            <i class="fa-solid fa-ellipsis fa-fade text-slate-300 text-[18px]"></i>
+                        </span>
                         <span class="text-[12px] font-bold text-slate-400">ريال</span>
                     </div>
                 </div>
@@ -405,15 +418,15 @@
                         <div class="flex flex-col gap-2 mt-auto">
                             <div onclick="openDetails('opRec', 'مقبوضات الأنشطة التشغيلية')" class="clickable-row flex justify-between items-center bg-slate-50 px-4 py-2.5 rounded-lg border border-slate-100">
                                 <span class="text-[12px] font-bold text-slate-600 flex items-center gap-2"><i class="fa-solid fa-plus text-[9px] text-slate-400"></i> مقبوضات</span>
-                                <span id="ui-op-rec" class="font-numbers font-black text-[var(--charcoal-900)] text-[14px] w-[140px] inline-block text-right" dir="ltr">0.00</span>
+                                <span id="ui-op-rec" class="font-numbers font-black text-[var(--charcoal-900)] text-[14px] w-[140px] inline-block text-right" dir="ltr">...</span>
                             </div>
                             <div onclick="openDetails('opPay', 'مدفوعات الأنشطة التشغيلية')" class="clickable-row flex justify-between items-center bg-slate-50 px-4 py-2.5 rounded-lg border border-slate-100">
                                 <span class="text-[12px] font-bold text-slate-600 flex items-center gap-2"><i class="fa-solid fa-minus text-[9px] text-[var(--danger)]"></i> مدفوعات</span>
-                                <span id="ui-op-pay" class="font-numbers font-black text-[var(--danger)] text-[14px] w-[140px] inline-block text-right" dir="ltr">0.00</span>
+                                <span id="ui-op-pay" class="font-numbers font-black text-[var(--danger)] text-[14px] w-[140px] inline-block text-right" dir="ltr">...</span>
                             </div>
                             <div class="flex justify-between items-center bg-slate-100 px-4 py-3 rounded-lg border border-slate-200 mt-1 shadow-sm">
                                 <span class="text-[13px] font-black text-[var(--charcoal-900)]">صافي النشاط التشغيلي</span>
-                                <span id="ui-op-net" class="font-numbers font-black text-[var(--danger)] text-[16px] w-[140px] inline-block text-right" dir="ltr">0.00</span>
+                                <span id="ui-op-net" class="font-numbers font-black text-[var(--danger)] text-[16px] w-[140px] inline-block text-right" dir="ltr">...</span>
                             </div>
                         </div>
                     </div>
@@ -434,15 +447,15 @@
                         <div class="flex flex-col gap-2 mt-auto">
                             <div onclick="openDetails('invRec', 'مقبوضات الأنشطة الاستثمارية (عوائد)')" class="clickable-row flex justify-between items-center bg-slate-50 px-4 py-2.5 rounded-lg border border-slate-100">
                                 <span class="text-[12px] font-bold text-slate-600 flex items-center gap-2"><i class="fa-solid fa-plus text-[9px] text-slate-400"></i> مقبوضات (عوائد)</span>
-                                <span id="ui-inv-rec" class="font-numbers font-black text-[var(--charcoal-900)] text-[14px] w-[140px] inline-block text-right" dir="ltr">0.00</span>
+                                <span id="ui-inv-rec" class="font-numbers font-black text-[var(--charcoal-900)] text-[14px] w-[140px] inline-block text-right" dir="ltr">...</span>
                             </div>
                             <div onclick="openDetails('invPay', 'مدفوعات الأنشطة الاستثمارية')" class="clickable-row flex justify-between items-center bg-slate-50 px-4 py-2.5 rounded-lg border border-slate-100">
                                 <span class="text-[12px] font-bold text-slate-600 flex items-center gap-2"><i class="fa-solid fa-minus text-[9px] text-[var(--danger)]"></i> مدفوعات (استثمار)</span>
-                                <span id="ui-inv-pay" class="font-numbers font-black text-[var(--danger)] text-[14px] w-[140px] inline-block text-right" dir="ltr">0.00</span>
+                                <span id="ui-inv-pay" class="font-numbers font-black text-[var(--danger)] text-[14px] w-[140px] inline-block text-right" dir="ltr">...</span>
                             </div>
                             <div class="flex justify-between items-center bg-slate-100 px-4 py-3 rounded-lg border border-slate-200 mt-1 shadow-sm">
                                 <span class="text-[13px] font-black text-[var(--charcoal-900)]">صافي النشاط الاستثماري</span>
-                                <span id="ui-inv-net" class="font-numbers font-black text-[var(--danger)] text-[16px] w-[140px] inline-block text-right" dir="ltr">0.00</span>
+                                <span id="ui-inv-net" class="font-numbers font-black text-[var(--danger)] text-[16px] w-[140px] inline-block text-right" dir="ltr">...</span>
                             </div>
                         </div>
                     </div>
@@ -463,15 +476,15 @@
                         <div class="flex flex-col gap-2 mt-auto">
                             <div onclick="openDetails('finRec', 'مقبوضات الأنشطة التمويلية')" class="clickable-row flex justify-between items-center bg-slate-50 px-4 py-2.5 rounded-lg border border-slate-100">
                                 <span class="text-[12px] font-bold text-slate-600 flex items-center gap-2"><i class="fa-solid fa-plus text-[9px] text-slate-400"></i> تمويل مستلم</span>
-                                <span id="ui-fin-rec" class="font-numbers font-black text-[var(--charcoal-900)] text-[14px] w-[140px] inline-block text-right" dir="ltr">0.00</span>
+                                <span id="ui-fin-rec" class="font-numbers font-black text-[var(--charcoal-900)] text-[14px] w-[140px] inline-block text-right" dir="ltr">...</span>
                             </div>
                             <div onclick="openDetails('finPay', 'مدفوعات الأنشطة التمويلية')" class="clickable-row flex justify-between items-center bg-slate-50 px-4 py-2.5 rounded-lg border border-slate-100">
                                 <span class="text-[12px] font-bold text-slate-600 flex items-center gap-2"><i class="fa-solid fa-minus text-[9px] text-[var(--danger)]"></i> قروض</span>
-                                <span id="ui-fin-pay" class="font-numbers font-black text-[var(--danger)] text-[14px] w-[140px] inline-block text-right" dir="ltr">0.00</span>
+                                <span id="ui-fin-pay" class="font-numbers font-black text-[var(--danger)] text-[14px] w-[140px] inline-block text-right" dir="ltr">...</span>
                             </div>
                             <div class="flex justify-between items-center bg-slate-100 px-4 py-3 rounded-lg border border-slate-200 mt-1 shadow-sm">
                                 <span class="text-[13px] font-black text-[var(--charcoal-900)]">صافي النشاط التمويلي</span>
-                                <span id="ui-fin-net" class="font-numbers font-black text-[var(--charcoal-900)] text-[16px] w-[140px] inline-block text-right" dir="ltr">0.00</span>
+                                <span id="ui-fin-net" class="font-numbers font-black text-[var(--charcoal-900)] text-[16px] w-[140px] inline-block text-right" dir="ltr">...</span>
                             </div>
                         </div>
                     </div>
@@ -487,7 +500,7 @@
                 </div>
                 <div class="flex-1 bg-white rounded-xl border border-slate-200 shadow-sm relative z-0 flex flex-col justify-center overflow-x-auto custom-scroll">
                     <div id="timeline-container" class="relative w-full flex justify-between items-start px-6 min-w-max py-4">
-                        <!-- سيتم رسم خط الزمن هنا برمجياً بناءً على الأشهر المرئية فقط -->
+                        <div class="w-full text-center py-10 text-slate-400 font-bold"><i class="fa-solid fa-spinner fa-spin text-xl"></i> جاري إعداد وتحديث مسار التدفقات...</div>
                     </div>
                 </div>
             </div>
@@ -500,10 +513,21 @@
                 <span id="text_footerText" class="text-[var(--charcoal-600)] font-bold">قائمة التدفقات النقدية</span>
             </div>
             <div class="w-2/4 flex justify-center items-center gap-3">
-                <button onclick="window.print()" class="no-print flex items-center gap-2 bg-[var(--charcoal-800)] text-white px-5 py-2.5 rounded-lg text-[12px] font-bold hover:bg-[var(--charcoal-900)] transition-all shadow-sm">
-                    <i class="fa-solid fa-print text-[13px] text-[var(--gold-primary)]"></i> طباعة PDF
-                </button>
                 
+                <div class="no-print flex items-center gap-2 bg-slate-100 p-1 rounded-lg border border-slate-200">
+                    <button onclick="window.print()" class="flex items-center gap-2 bg-[var(--charcoal-800)] text-white px-4 py-1.5 rounded-md text-[12px] font-bold hover:bg-[var(--charcoal-900)] transition-all shadow-sm">
+                        <i class="fa-solid fa-print text-[13px] text-[var(--gold-primary)]"></i> طباعة PDF
+                    </button>
+                    <label class="flex items-center gap-1.5 px-2 cursor-pointer group" title="إزالة الخلفية الرمادية الرئيسية عند الطباعة مع الاحتفاظ بخلفيات البنود">
+                        <input type="checkbox" onchange="document.body.classList.toggle('print-no-bg', this.checked)" class="w-3.5 h-3.5 accent-[var(--gold-primary)] cursor-pointer">
+                        <span class="text-[11px] font-bold text-slate-600 group-hover:text-slate-800 select-none">بدون خلفية</span>
+                    </label>
+                </div>
+                
+                <button onclick="exportToExcel()" class="no-print flex items-center gap-2 px-5 py-2.5 rounded-lg text-[12px] font-bold transition-all text-white shadow-sm hover:shadow-md" style="background: linear-gradient(135deg, #0284C7 0%, #0369A1 100%);">
+                    <i class="fa-solid fa-file-export text-[14px]"></i> تصدير البيانات (قالب)
+                </button>
+
                 <input type="file" id="excelInput" accept=".xlsx, .xls" class="hidden" onchange="handleExcelImport(event)">
                 <button onclick="document.getElementById('excelInput').click()" class="no-print btn-excel flex items-center gap-2 px-5 py-2.5 rounded-lg text-[12px] font-bold transition-all">
                     <i class="fa-solid fa-file-excel text-[14px]"></i> استيراد Excel
@@ -517,7 +541,7 @@
             </div>
             <div class="w-1/4 text-left flex justify-end flex-col items-end gap-0.5">
                 <span id="text_companyName">شركة اتحاد الراجحي</span>
-                <span id="cloud-status" class="text-[10px] text-slate-400 font-normal no-print"><i class="fa-solid fa-cloud text-slate-300 ml-1"></i>بانتظار المزامنة...</span>
+                <span id="cloud-status" class="text-[10px] text-slate-400 font-normal no-print"><i class="fa-solid fa-cloud text-slate-300 ml-1"></i>جاري الاتصال بالقاعدة...</span>
             </div>
         </footer>
 
@@ -569,7 +593,6 @@
                         </h2>
                     </div>
                     <div class="flex items-center gap-4">
-                        <!-- تم إخفاء زر الحفظ التلقائي من هنا ونقله للرئيسية لحماية البيانات -->
                         <button id="saveBtn" onclick="closeDetails()" class="hidden flex items-center gap-2 bg-[var(--charcoal-900)] text-white px-6 py-2 rounded-lg text-[13px] font-bold hover:bg-black transition-colors shadow-md">
                             <i class="fa-solid fa-check"></i> إنهاء التعديل (تذكر الحفظ السحابي لاحقاً)
                         </button>
@@ -606,7 +629,9 @@
                 </div>
                 <div class="p-5 flex flex-col gap-4">
                     <p class="text-[12px] text-slate-600 font-bold text-justify leading-relaxed">
-                        هذا هو الرصيد الكلي <span class="text-red-600">قبل</span> أول شهر مسجل في النظام. الأرصدة للأشهر التالية سيتم حسابها آلياً بناءً عليه.
+                        هذا هو الرصيد الكلي <span class="text-red-600">قبل</span> أول شهر مسجل في النظام.
+                        <br><br>
+                        <span class="text-[11px] text-[var(--gold-dark)]">ملاحظة: إذا كان النطاق الزمني المعروض لا يبدأ من أول شهر، سيقوم النظام تلقائياً بجمع تدفقات الأشهر السابقة وإضافتها لهذا الرصيد الأساسي ليعرض لك الرصيد التراكمي الصحيح.</span>
                     </p>
                     <input type="text" id="openBalanceInput" class="w-full px-4 py-2 border border-slate-300 rounded-lg text-left focus:outline-none focus:border-[var(--gold-primary)] font-numbers text-lg" dir="ltr" onfocus="this.value = window.parseFormatted(this.value); this.select();" onblur="this.value = window.formatCurr(window.parseFormatted(this.value));">
                     <div class="flex gap-2 mt-2">
@@ -629,7 +654,7 @@
                         هل بالفعل تريد تعديل قيمة الرصيد الافتتاحي للنقد وتحديثه مباشرة في السحابة؟
                     </p>
                     <div class="flex gap-2 mt-2">
-                        <button onclick="confirmSaveOpeningBalance()" class="flex-1 bg-[var(--gold-primary)] text-white py-2 rounded-lg text-[13px] font-bold hover:bg-[var(--gold-dark)] transition-colors">موافق</button>
+                        <button id="confirmOpenBalBtn" onclick="confirmSaveOpeningBalance()" class="flex-1 bg-[var(--gold-primary)] text-white py-2 rounded-lg text-[13px] font-bold hover:bg-[var(--gold-dark)] transition-colors flex justify-center items-center gap-2">موافق</button>
                         <button onclick="cancelSaveOpeningBalance()" class="flex-1 bg-slate-100 text-slate-600 py-2 rounded-lg text-[13px] font-bold hover:bg-slate-200 transition-colors">إلغاء</button>
                     </div>
                 </div>
@@ -648,8 +673,26 @@
                         هل تريد بالفعل إظهار بيانات الفترة المحددة وتحديث السحابة؟
                     </p>
                     <div class="flex gap-2 mt-2">
-                        <button onclick="confirmDateChange()" class="flex-1 bg-[var(--gold-primary)] text-white py-2 rounded-lg text-[13px] font-bold hover:bg-[var(--gold-dark)] transition-colors">موافق</button>
+                        <button id="confirmDateBtn" onclick="confirmDateChange()" class="flex-1 bg-[var(--gold-primary)] text-white py-2 rounded-lg text-[13px] font-bold hover:bg-[var(--gold-dark)] transition-colors flex justify-center items-center gap-2">موافق</button>
                         <button onclick="cancelDateChange()" class="flex-1 bg-slate-100 text-slate-600 py-2 rounded-lg text-[13px] font-bold hover:bg-slate-200 transition-colors">إلغاء</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- نافذة الإشعارات المخصصة (بديل الـ Alert) -->
+        <div id="alertModal" class="modal-overlay no-print" style="z-index: 70;">
+            <div class="bg-white rounded-xl shadow-2xl border border-slate-200 w-[350px] overflow-hidden transform scale-100">
+                <div class="bg-[var(--charcoal-900)] text-white px-5 py-3 flex items-center gap-2">
+                    <i id="alertIcon" class="fa-solid fa-bell text-[var(--gold-primary)]"></i>
+                    <h3 id="alertTitle" class="font-bold text-[14px]">إشعار النظام</h3>
+                </div>
+                <div class="p-5 flex flex-col gap-4">
+                    <p id="alertMessage" class="text-[13px] text-slate-600 font-bold text-center leading-relaxed whitespace-pre-line">
+                        <!-- رسالة التنبيه -->
+                    </p>
+                    <div class="flex gap-2 mt-2">
+                        <button onclick="closeCustomAlert()" class="flex-1 bg-[var(--gold-primary)] text-white py-2 rounded-lg text-[13px] font-bold hover:bg-[var(--gold-dark)] transition-colors">موافق</button>
                     </div>
                 </div>
             </div>
@@ -687,8 +730,10 @@
                 const openBalanceModal = document.getElementById('openBalanceModal');
                 const confirmDateModal = document.getElementById('confirmDateModal');
                 const confirmOpenBalModal = document.getElementById('confirmOpenBalModal');
+                const alertModal = document.getElementById('alertModal');
                 
-                if (passwordModal.classList.contains('active')) window.closePasswordModal();
+                if (alertModal && alertModal.classList.contains('active')) window.closeCustomAlert();
+                else if (passwordModal.classList.contains('active')) window.closePasswordModal();
                 else if (openBalanceModal && openBalanceModal.classList.contains('active')) window.closeOpenBalanceModal();
                 else if (confirmOpenBalModal && confirmOpenBalModal.classList.contains('active')) window.cancelSaveOpeningBalance();
                 else if (confirmDateModal && confirmDateModal.classList.contains('active')) window.cancelDateChange();
@@ -696,11 +741,23 @@
             }
         });
 
+        // دوال الإشعار المخصص (بديل Alert)
+        window.showCustomAlert = function(message, title = "إشعار النظام", icon = "fa-bell") {
+            document.getElementById('alertTitle').innerText = title;
+            document.getElementById('alertMessage').innerText = message;
+            document.getElementById('alertIcon').className = `fa-solid ${icon} text-[var(--gold-primary)]`;
+            document.getElementById('alertModal').classList.add('active');
+        };
+
+        window.closeCustomAlert = function() {
+            document.getElementById('alertModal').classList.remove('active');
+        };
+
         // قاموس الأشهر لترجمة النصوص إلى تواريخ للمقارنة والفلاتر
         const arMonthsMap = { 'يناير':0, 'فبراير':1, 'مارس':2, 'أبريل':3, 'مايو':4, 'يونيو':5, 'يوليو':6, 'أغسطس':7, 'سبتمبر':8, 'أكتوبر':9, 'نوفمبر':10, 'ديسمبر':11 };
 
         window.appState = {
-            openBalance: 400000,
+            openBalance: 0,
             dateStartStr: "16 Nov 2025",
             dateEndStr: "31 Mar 2026",
             titles: {
@@ -740,8 +797,8 @@
         window.pendingAuthCallback = null;
 
         // متغيرات مؤقتة لتأكيد تغيير التاريخ
-        window.pendingDateType = null;
-        window.pendingDateValue = null;
+        window.pendingStartDate = null;
+        window.pendingEndDate = null;
 
         // دالة الفلترة الديناميكية - تستخرج الأشهر المطلوبة فقط للعرض وتترك الباقي في الذاكرة
         window.getVisibleMonths = function() {
@@ -764,7 +821,8 @@
 
         // حساب الرصيد الافتتاحي التراكمي الدقيق لبداية الفترة المحددة
         window.calculatePeriodOpeningBalance = function() {
-            let globalBal = window.appState.openBalance;
+            // استخدام parseFloat لتجنب أي عملية دمج نصوص خاطئة (String Concatenation) من بيانات السحابة
+            let globalBal = parseFloat(window.appState.openBalance) || 0;
             const startDate = new Date(window.appState.dateStartStr);
             const sTime = new Date(startDate.getFullYear(), startDate.getMonth(), 1).getTime();
 
@@ -799,7 +857,7 @@
                 }
             } catch (e) {
                 console.error("Firebase save error:", e);
-                alert("حدث خطأ أثناء الاتصال بقاعدة البيانات.");
+                window.showCustomAlert("حدث خطأ أثناء الاتصال بقاعدة البيانات. يرجى التأكد من اتصالك بالإنترنت.", "خطأ في الاتصال", "fa-triangle-exclamation");
                 throw e;
             }
         }
@@ -807,8 +865,10 @@
         // الحفظ اليدوي للسحابة
         window.requestManualSync = function() {
             window.requestAuth(async () => {
-                await window.saveToCloudSilently();
-                alert("تم حفظ جميع التحديثات والبيانات في السحابة بنجاح.");
+                try {
+                    await window.saveToCloudSilently();
+                    window.showCustomAlert("تم حفظ جميع التحديثات والبيانات في السحابة بنجاح.", "نجاح الحفظ", "fa-circle-check");
+                } catch(e) {}
             });
         };
 
@@ -849,10 +909,11 @@
                 defaultDate: window.appState.dateStartStr,
                 disableMobile: true,
                 onChange: function(selectedDates, dateStr) {
-                    if (dateStr === window.appState.dateStartStr) return;
-                    window.pendingDateType = 'start';
-                    window.pendingDateValue = dateStr;
-                    document.getElementById('confirmDateModal').classList.add('active');
+                    window.pendingStartDate = dateStr;
+                    // الانتقال التلقائي لتاريخ الانتهاء بعد اختيار تاريخ البدء
+                    setTimeout(() => {
+                        window.fpEnd.open();
+                    }, 100);
                 }
             });
             
@@ -861,10 +922,18 @@
                 defaultDate: window.appState.dateEndStr,
                 disableMobile: true,
                 onChange: function(selectedDates, dateStr) {
-                    if (dateStr === window.appState.dateEndStr) return;
-                    window.pendingDateType = 'end';
-                    window.pendingDateValue = dateStr;
-                    document.getElementById('confirmDateModal').classList.add('active');
+                    window.pendingEndDate = dateStr;
+                    
+                    // إذا لم يتم تعديل تاريخ البدء، نعتمد التاريخ الحالي
+                    if (!window.pendingStartDate) window.pendingStartDate = window.appState.dateStartStr;
+
+                    // إظهار نافذة التأكيد فقط إذا تم فعلاً اختيار نطاق مختلف
+                    if (window.pendingStartDate !== window.appState.dateStartStr || window.pendingEndDate !== window.appState.dateEndStr) {
+                        document.getElementById('confirmDateModal').classList.add('active');
+                    } else {
+                        window.pendingStartDate = null;
+                        window.pendingEndDate = null;
+                    }
                 }
             });
 
@@ -873,36 +942,50 @@
 
         // دوال نافذة تأكيد التاريخ المضافة حديثاً
         window.confirmDateChange = async function() {
-            if (window.pendingDateType === 'start') {
-                window.appState.dateStartStr = window.pendingDateValue;
-                document.getElementById('ui-date-start').innerText = window.pendingDateValue;
-            } else if (window.pendingDateType === 'end') {
-                window.appState.dateEndStr = window.pendingDateValue;
-                document.getElementById('ui-date-end').innerText = window.pendingDateValue;
-            }
+            const btn = document.getElementById('confirmDateBtn');
+            const origText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري الحفظ...';
+            btn.disabled = true;
 
-            document.getElementById('confirmDateModal').classList.remove('active');
-            window.updateDashboard();
-            
-            // حفظ سحابي مباشر بدون طلب الباسورد كما طلبت
-            await window.saveToCloudSilently();
-            
-            window.pendingDateType = null;
-            window.pendingDateValue = null;
+            const oldStart = window.appState.dateStartStr;
+            const oldEnd = window.appState.dateEndStr;
+
+            if (window.pendingStartDate) window.appState.dateStartStr = window.pendingStartDate;
+            if (window.pendingEndDate) window.appState.dateEndStr = window.pendingEndDate;
+
+            // حفظ سحابي مباشر وإشعار للنجاح
+            try {
+                await window.saveToCloudSilently();
+                // لن نحدث اللوحة إلا إذا تم الحفظ بنجاح
+                document.getElementById('ui-date-start').innerText = window.appState.dateStartStr;
+                document.getElementById('ui-date-end').innerText = window.appState.dateEndStr;
+                window.updateDashboard();
+                document.getElementById('confirmDateModal').classList.remove('active');
+                window.showCustomAlert("تم تغيير النطاق الزمني وحفظه كإعداد افتراضي في السحابة.", "تحديث النطاق الزمني", "fa-calendar-check");
+            } catch(e) {
+                // تراجع محلي في حال فشل الحفظ
+                window.appState.dateStartStr = oldStart;
+                window.appState.dateEndStr = oldEnd;
+                window.fpStart.setDate(oldStart, false);
+                window.fpEnd.setDate(oldEnd, false);
+                window.showCustomAlert("فشل الحفظ في السحابة. يرجى التأكد من اتصالك بالإنترنت والمحاولة مجدداً.", "خطأ في المزامنة", "fa-triangle-exclamation");
+            } finally {
+                btn.innerHTML = origText;
+                btn.disabled = false;
+                window.pendingStartDate = null;
+                window.pendingEndDate = null;
+            }
         };
 
         window.cancelDateChange = function() {
             document.getElementById('confirmDateModal').classList.remove('active');
             
-            // إعادة الفلاتبيكر لتاريخه القديم دون تفعيل onChange مرة أخرى
-            if (window.pendingDateType === 'start') {
-                window.fpStart.setDate(window.appState.dateStartStr, false);
-            } else if (window.pendingDateType === 'end') {
-                window.fpEnd.setDate(window.appState.dateEndStr, false);
-            }
+            // إعادة الفلاتبيكر لتواريخه القديمة
+            window.fpStart.setDate(window.appState.dateStartStr, false);
+            window.fpEnd.setDate(window.appState.dateEndStr, false);
             
-            window.pendingDateType = null;
-            window.pendingDateValue = null;
+            window.pendingStartDate = null;
+            window.pendingEndDate = null;
         };
 
         // دوال مساعدة للتنسيق
@@ -913,8 +996,20 @@
         window.parseFormatted = function(val) {
             if(typeof val === 'number') return val;
             let str = val.toString().trim();
+            
+            // تحويل الأرقام العربية/الفارسية إلى إنجليزية لضمان صحة المعالجة الحسابية
+            str = str.replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
+            str = str.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d));
+            
             let isNegative = str.startsWith('-') || (str.startsWith('(') && str.endsWith(')'));
-            let num = parseFloat(str.replace(/[^0-9.]/g, '')) || 0;
+            
+            // تنظيف النص من أي شيء عدا الأرقام والنقطة العشرية
+            let cleanStr = str.replace(/[^0-9.]/g, '');
+            // معالجة حالة وجود أكثر من نقطة عشرية بالخطأ
+            let parts = cleanStr.split('.');
+            let numStr = parts[0] + (parts.length > 1 ? '.' + parts[1] : '');
+            
+            let num = parseFloat(numStr) || 0;
             return isNegative ? -num : num;
         }
         
@@ -1371,20 +1466,38 @@
                 window.closeOpenBalanceModal();
                 document.getElementById('confirmOpenBalModal').classList.add('active');
             } else {
-                alert("يرجى إدخال رقم صحيح.");
+                window.showCustomAlert("يرجى إدخال رقم صحيح.", "إدخال غير صالح", "fa-circle-xmark");
             }
         }
 
         window.confirmSaveOpeningBalance = async function() {
             if (window.pendingOpenBalanceValue !== null) {
-                window.appState.openBalance = window.pendingOpenBalanceValue;
-                window.updateDashboard();
-                document.getElementById('confirmOpenBalModal').classList.remove('active');
+                const btn = document.getElementById('confirmOpenBalBtn');
+                const origText = btn.innerHTML;
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري الحفظ...';
+                btn.disabled = true;
+
+                // نحتفظ بالقيمة القديمة لكي نتراجع عنها إذا رفضت السحابة الاتصال
+                const oldBalance = window.appState.openBalance;
+                // إجبار التحويل إلى رقم صافي 100%
+                window.appState.openBalance = Number(window.pendingOpenBalanceValue);
                 
-                // حفظ سحابي مباشر
-                await window.saveToCloudSilently();
-                
-                window.pendingOpenBalanceValue = null;
+                try {
+                    // الانتظار الحقيقي للحفظ السحابي
+                    await window.saveToCloudSilently();
+                    // التحديث الفوري للوحة فقط بعد التأكد من الحفظ السحابي
+                    window.updateDashboard(); 
+                    document.getElementById('confirmOpenBalModal').classList.remove('active');
+                    window.showCustomAlert("تم تعديل قيمة الرصيد الافتتاحي وحفظه في السحابة بنجاح.", "تحديث الرصيد", "fa-check-circle");
+                } catch (e) {
+                    // التراجع عن التعديل الوهمي لو فشل الحفظ
+                    window.appState.openBalance = oldBalance;
+                    window.showCustomAlert("فشل الحفظ في السحابة. يرجى التأكد من اتصالك بالإنترنت والمحاولة مجدداً.", "خطأ في المزامنة", "fa-triangle-exclamation");
+                } finally {
+                    btn.innerHTML = origText;
+                    btn.disabled = false;
+                    window.pendingOpenBalanceValue = null;
+                }
             }
         }
 
@@ -1392,6 +1505,65 @@
             document.getElementById('confirmOpenBalModal').classList.remove('active');
             window.pendingOpenBalanceValue = null;
         }
+
+        // ===============================================
+        // منطق تصدير البيانات إلى ملف Excel (إنشاء قالب)
+        // ===============================================
+        window.exportToExcel = function() {
+            window.requestAuth(() => {
+                try {
+                    // إعداد الترويسة (أسماء الأعمدة) لتتطابق مع ما تتوقعه دالة الاستيراد
+                    let headers = ["البيان", "التصنيف (للمرجعية فقط)"];
+                    window.appState.months.forEach(m => headers.push(m.label)); // مثال: مايو 26
+
+                    let excelData = [headers];
+
+                    const catNames = {
+                        'opRec': 'مقبوضات تشغيلية',
+                        'opPay': 'مدفوعات تشغيلية',
+                        'invRec': 'مقبوضات استثمارية',
+                        'invPay': 'مدفوعات استثمارية',
+                        'finRec': 'مقبوضات تمويلية',
+                        'finPay': 'مدفوعات تمويلية'
+                    };
+                    const categories = ['opRec', 'opPay', 'invRec', 'invPay', 'finRec', 'finPay'];
+
+                    // تعبئة البيانات
+                    categories.forEach(cat => {
+                        window.appState[cat].forEach(item => {
+                            let row = [item.name, catNames[cat]];
+                            window.appState.months.forEach(m => {
+                                row.push(item[m.key] || 0);
+                            });
+                            excelData.push(row);
+                        });
+                    });
+
+                    // إنشاء ورقة العمل (Worksheet)
+                    const ws = XLSX.utils.aoa_to_sheet(excelData);
+                    
+                    // دعم اتجاه النص من اليمين لليسار (RTL) في الإكسل
+                    ws['!dir'] = 'rtl';
+                    
+                    // تعديل عرض الأعمدة لتبدو مرتبة
+                    ws['!cols'] = [{wch: 40}, {wch: 25}];
+                    window.appState.months.forEach(() => ws['!cols'].push({wch: 15}));
+
+                    // إنشاء ملف الإكسل (Workbook)
+                    const wb = XLSX.utils.book_new();
+                    XLSX.utils.book_append_sheet(wb, ws, "التدفقات النقدية");
+
+                    // تحميل الملف للمستخدم
+                    XLSX.writeFile(wb, "قالب_وتمبلت_التدفقات_النقدية.xlsx");
+                    
+                    window.showCustomAlert("تم تصدير البيانات إلى ملف إكسل بنجاح.\nيمكنك تعديل الأرقام في هذا الملف وإعادة استيراده لاحقاً كقالب جاهز.", "تصدير ناجح", "fa-file-export");
+
+                } catch (error) {
+                    console.error("Export Error:", error);
+                    window.showCustomAlert("حدث خطأ أثناء محاولة تصدير الملف.", "خطأ فني", "fa-triangle-exclamation");
+                }
+            });
+        };
 
         // ===============================================
         // منطق قراءة بيانات الإكسل واستخلاصها الذكي
@@ -1439,7 +1611,7 @@
                             }
                         });
 
-                        alert(`تمت المعاينة بنجاح.\nتم تحديث قيم ${updatedCount} إدخال شهري للبنود المطابقة.\n\nتنبيه: راجع اللوحة، ثم اضغط (حفظ ومزامنة في السحابة) لاعتمادها.`);
+                        window.showCustomAlert(`تمت المعاينة بنجاح.\nتم تحديث قيم ${updatedCount} إدخال شهري للبنود المطابقة.\n\nتنبيه: راجع اللوحة، ثم اضغط (حفظ ومزامنة في السحابة) لاعتمادها.`, "تم الاستيراد", "fa-file-excel");
                         
                         document.getElementById('excelInput').value = ''; // تصفير الرفع
                         window.updateDashboard(); // تحديث اللوحة بالبيانات الجديدة المستوردة
@@ -1447,7 +1619,7 @@
 
                     } catch(error) {
                         console.error(error);
-                        alert("حدث خطأ أثناء محاولة قراءة الملف. يرجى التأكد من أن الملف بصيغة إكسل صحيحة (XLSX).");
+                        window.showCustomAlert("حدث خطأ أثناء محاولة قراءة الملف. يرجى التأكد من أن الملف بصيغة إكسل صحيحة (XLSX).", "خطأ في الملف", "fa-file-circle-xmark");
                     }
                 };
                 reader.readAsArrayBuffer(file);
