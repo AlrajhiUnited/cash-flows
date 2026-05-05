@@ -510,7 +510,9 @@
         <!-- تذييل الصفحة -->
         <footer class="w-full px-10 flex justify-between items-center text-[13px] bg-white border-t border-slate-200 h-[60px] shrink-0 font-bold text-slate-500">
             <div class="w-1/4 text-right flex items-center gap-1">
-                <span id="text_footerText" class="text-[var(--charcoal-600)] font-bold">قائمة التدفقات النقدية</span>
+                <button onclick="restore2026Data()" class="no-print flex items-center gap-1.5 bg-purple-50 text-purple-600 border border-purple-200 px-3 py-1.5 rounded-lg text-[11px] font-bold hover:bg-purple-600 hover:text-white transition-all shadow-sm" title="استخدم هذا الزر لرفع البيانات المدمجة للسحابة لإصلاح التلبك">
+                    <i class="fa-solid fa-life-ring"></i> استعادة بيانات 2026 للسحابة
+                </button>
             </div>
             <div class="w-2/4 flex justify-center items-center gap-3">
                 
@@ -722,6 +724,9 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
+        // متغير الحماية المطلق لمنع الكتابة العمياء فوق السحابة
+        window.isCloudReadComplete = false;
+
         // تفعيل زر الهروب (Esc)
         document.addEventListener('keydown', function(event) {
             if (event.key === "Escape") {
@@ -756,10 +761,11 @@
         // قاموس الأشهر لترجمة النصوص إلى تواريخ للمقارنة والفلاتر
         const arMonthsMap = { 'يناير':0, 'فبراير':1, 'مارس':2, 'أبريل':3, 'مايو':4, 'يونيو':5, 'يوليو':6, 'أغسطس':7, 'سبتمبر':8, 'أكتوبر':9, 'نوفمبر':10, 'ديسمبر':11 };
 
-        window.appState = {
+        // قالب النجاة (Backup Template): يحتوي على بيانات 2026 كاملة ونظيفة
+        window.pure2026Template = {
             openBalance: 0,
-            dateStartStr: "16 Nov 2025",
-            dateEndStr: "31 Mar 2026",
+            dateStartStr: "01 May 2026",
+            dateEndStr: "31 Dec 2026",
             titles: {
                 mainTitle: "قائمة التدفقات النقدية المباشرة",
                 subTitle: "تقرير شهري (عرض حسب النطاق الزمني)",
@@ -780,17 +786,70 @@
                 footerText: "قائمة التدفقات النقدية",
                 companyName: "شركة اتحاد الراجحي"
             },
-            // القائمة الشاملة لجميع الأشهر (المخفية والظاهرة)
             months: [
-                { key: 'nov', label: 'نوفمبر 25', name: 'نوفمبر', year: '2025' },
-                { key: 'dec', label: 'ديسمبر 25', name: 'ديسمبر', year: '2025' },
-                { key: 'jan', label: 'يناير 26', name: 'يناير', year: '2026' },
-                { key: 'feb', label: 'فبراير 26', name: 'فبراير', year: '2026' },
-                { key: 'mar', label: 'مارس 26', name: 'مارس', year: '2026' }
+                { key: 'may26', label: 'مايو 26', name: 'مايو', year: '2026' },
+                { key: 'jun26', label: 'يونيو 26', name: 'يونيو', year: '2026' },
+                { key: 'jul26', label: 'يوليو 26', name: 'يوليو', year: '2026' },
+                { key: 'aug26', label: 'أغسطس 26', name: 'أغسطس', year: '2026' },
+                { key: 'sep26', label: 'سبتمبر 26', name: 'سبتمبر', year: '2026' },
+                { key: 'oct26', label: 'أكتوبر 26', name: 'أكتوبر', year: '2026' },
+                { key: 'nov26', label: 'نوفمبر 26', name: 'نوفمبر', year: '2026' },
+                { key: 'dec26', label: 'ديسمبر 26', name: 'ديسمبر', year: '2026' }
             ],
-            opRec: [ { id: 'or1', name: "تحصيلات افتراضية", nov: 10000, dec: 20000, jan: 0, feb: 0, mar: 0 } ],
-            opPay: [], invRec: [], invPay: [], finRec: [], finPay: []
+            opRec: [
+                { id: 'or1', name: "تحصيلات من ايجارفندق الششة", may26: 3500000, jun26: 0, jul26: 2500000, aug26: 0, sep26: 0, oct26: 0, nov26: 0, dec26: 0 },
+                { id: 'or2', name: "تحصيلات من ايجار مبنى الادارة", may26: 0, jun26: 663572, jul26: 0, aug26: 0, sep26: 0, oct26: 0, nov26: 0, dec26: 0 },
+                { id: 'or3', name: "مدارس البنات", may26: 0, jun26: 0, jul26: 0, aug26: 0, sep26: 0, oct26: 0, nov26: 0, dec26: 0 },
+                { id: 'or4', name: "مدارس البنين", may26: 0, jun26: 0, jul26: 0, aug26: 0, sep26: 0, oct26: 0, nov26: 0, dec26: 0 },
+                { id: 'or5', name: "تحصيلات معارض عمائر البساتين بريدة", may26: 309500, jun26: 0, jul26: 0, aug26: 0, sep26: 0, oct26: 0, nov26: 0, dec26: 0 },
+                { id: 'or6', name: "تحصيلات من ايجارعمارة السلام", may26: 0, jun26: 0, jul26: 0, aug26: 0, sep26: 0, oct26: 0, nov26: 0, dec26: 0 },
+                { id: 'or7', name: "تحصيلات من ايجار ارض الملقا", may26: 0, jun26: 0, jul26: 2375667.50, aug26: 0, sep26: 0, oct26: 0, nov26: 0, dec26: 0 },
+                { id: 'or8', name: "تحصيلات من ايجار ارض المزروعية", may26: 0, jun26: 0, jul26: 0, aug26: 0, sep26: 0, oct26: 0, nov26: 0, dec26: 0 },
+                { id: 'or9', name: "تحصيلات من ايجار ارض حائل", may26: 1749153, jun26: 1082217, jul26: 0, aug26: 0, sep26: 0, oct26: 0, nov26: 1749153, dec26: 0 },
+                { id: 'or10', name: "تحصيلات من ايجار ارض الراكة", may26: 1979029, jun26: 0, jul26: 0, aug26: 0, sep26: 0, oct26: 2117560.50, nov26: 0, dec26: 0 }
+            ],
+            invRec: [
+                { id: 'ir1', name: "مبيعات حائل", may26: 2916958, jun26: 2248592, jul26: 2279070, aug26: 4225978, sep26: 4260701, oct26: 4260701, nov26: 3420125, dec26: 3473800 },
+                { id: 'ir2', name: "مبيعات مساكن الروضة مجمع7", may26: 649650, jun26: 654628, jul26: 808151, aug26: 839860, sep26: 0, oct26: 0, nov26: 0, dec26: 0 },
+                { id: 'ir3', name: "مبيعات مساكن الروضة مجمع4", may26: 1048960, jun26: 977440, jul26: 977466, aug26: 986976, sep26: 198488, oct26: 2894504, nov26: 2894504, dec26: 2894504 },
+                { id: 'ir4', name: "مبيعات بساتين القصيم", may26: 1463000, jun26: 1500000, jul26: 750000, aug26: 750000, sep26: 1460000, oct26: 800000, nov26: 730000, dec26: 1460000 },
+                { id: 'ir5', name: "تحصيلات من حساب الضمان لمشروع الغروب", may26: 3483000, jun26: 2612250, jul26: 2925720, aug26: 3072006, sep26: 3409927, oct26: 4160111, nov26: 4243313, dec26: 4710077 },
+                { id: 'ir6', name: "توزيعات تحالف الانماء", may26: 0, jun26: 2000000, jul26: 2000000, aug26: 2000000, sep26: 1000000, oct26: 0, nov26: 0, dec26: 0 }
+            ],
+            opPay: [
+                { id: 'op1', name: "الرواتب", may26: 1150000, jun26: 1150000, jul26: 1150000, aug26: 1150000, sep26: 1150000, oct26: 1150000, nov26: 1150000, dec26: 1150000 },
+                { id: 'op2', name: "مصروفات التشغيل", may26: 300000, jun26: 300000, jul26: 300000, aug26: 300000, sep26: 300000, oct26: 300000, nov26: 300000, dec26: 300000 },
+                { id: 'op3', name: "اتعاب تدقيق القوائم والمستشار الزكوى", may26: 0, jun26: 0, jul26: 400000, aug26: 0, sep26: 0, oct26: 0, nov26: 0, dec26: 0 },
+                { id: 'op4', name: "تدريب العاملين", may26: 80000, jun26: 80000, jul26: 80000, aug26: 80000, sep26: 80000, oct26: 80000, nov26: 80000, dec26: 80000 },
+                { id: 'op5', name: "تامينات اجتماعية وتجديد اقامات", may26: 100000, jun26: 100000, jul26: 100000, aug26: 100000, sep26: 100000, oct26: 100000, nov26: 100000, dec26: 100000 },
+                { id: 'op6', name: "ضريبة قيمة مضافة", may26: 0, jun26: 800000, jul26: 0, aug26: 800000, sep26: 0, oct26: 0, nov26: 0, dec26: 0 },
+                { id: 'op7', name: "اتعاب محامين", may26: 100000, jun26: 100000, jul26: 100000, aug26: 100000, sep26: 100000, oct26: 100000, nov26: 100000, dec26: 100000 },
+                { id: 'op8', name: "مدفوعات قسم تكنولوجيا المعلومات", may26: 125000, jun26: 125000, jul26: 125000, aug26: 125000, sep26: 125000, oct26: 125000, nov26: 125000, dec26: 125000 },
+                { id: 'op9', name: "تسويق ودعاية", may26: 150000, jun26: 150000, jul26: 150000, aug26: 150000, sep26: 150000, oct26: 150000, nov26: 150000, dec26: 150000 }
+            ],
+            invPay: [
+                { id: 'ip1', name: "مشروع مساكن الروضة 7", may26: 1432700, jun26: 0, jul26: 0, aug26: 0, sep26: 0, oct26: 0, nov26: 0, dec26: 0 },
+                { id: 'ip2', name: "مساكن الروضة 10", may26: 140000, jun26: 140000, jul26: 140000, aug26: 1307443, sep26: 341010, oct26: 543121, nov26: 488809, dec26: 562130 },
+                { id: 'ip3', name: "مساكن الروضة 18", may26: 210000, jun26: 210000, jul26: 210000, aug26: 2082360, sep26: 544237, oct26: 836419, nov26: 752777, dec26: 865694 },
+                { id: 'ip4', name: "مساكن الروضة 5", may26: 140000, jun26: 140000, jul26: 140000, aug26: 1062191, sep26: 274791, oct26: 412187, nov26: 370968, dec26: 426614 },
+                { id: 'ip5', name: "النوايف", may26: 7944815, jun26: 9533778, jul26: 10010467, aug26: 9509943, sep26: 9034446, oct26: 10389613, nov26: 12987016, dec26: 16883121 },
+                { id: 'ip6', name: "مركز مبيعات النوايف", may26: 0, jun26: 592537, jul26: 681418, aug26: 647347, sep26: 485510, oct26: 534061, nov26: 830192, dec26: 871702 },
+                { id: 'ip7', name: "حديقة النوايف", may26: 0, jun26: 0, jul26: 1491082, aug26: 2982165, sep26: 3727706, oct26: 3808562, nov26: 4760703, dec26: 5793998 },
+                { id: 'ip8', name: "مدارس الروضة بنين", may26: 3156189, jun26: 4734284, jul26: 0, aug26: 0, sep26: 0, oct26: 0, nov26: 0, dec26: 0 },
+                { id: 'ip9', name: "مخطط الغروب", may26: 3483000, jun26: 2612250, jul26: 2925720, aug26: 3072006, sep26: 3409927, oct26: 4160111, nov26: 4243313, dec26: 4710077 },
+                { id: 'ip10', name: "مسار", may26: 0, jun26: 0, jul26: 0, aug26: 0, sep26: 0, oct26: 4460000, nov26: 4460000, dec26: 214460000 },
+                { id: 'ip11', name: "مخطط الرابيه", may26: 0, jun26: 0, jul26: 0, aug26: 600000, sep26: 0, oct26: 0, nov26: 0, dec26: 0 }
+            ],
+            finRec: [
+                { id: 'fr1', name: "اقتراض من بنوك", may26: 10000000, jun26: 15000000, jul26: 15000000, aug26: 15000000, sep26: 10000000, oct26: 0, nov26: 0, dec26: 0 }
+            ],
+            finPay: [
+                { id: 'fp1', name: "سداد قرض بنك الرياض", may26: 0, jun26: 0, jul26: 0, aug26: 0, sep26: 0, oct26: 0, nov26: 0, dec26: 159241710 }
+            ]
         };
+
+        // تعيين الحالة المبدئية عند فتح الملف لتكون مساوية للقالب (في حال لم توجد إنترنت)
+        window.appState = JSON.parse(JSON.stringify(window.pure2026Template));
 
         window.currentActiveCategory = null;
         window.isEditMode = false;
@@ -844,7 +903,14 @@
         }
 
         // حفظ صامت للسحابة لتجنب تكرار الكود
-        window.saveToCloudSilently = async function() {
+        // قفل أمان (forcePush): لا يمكن حفظ بيانات قديمة عن طريق الخطأ
+        window.saveToCloudSilently = async function(forcePush = false) {
+            // التحقق من قفل الأمان: هل اكتمل جلب السحابة؟ إذا لا، نمنع الحفظ لتفادي مسح البيانات القديمة
+            if (!window.isCloudReadComplete && !forcePush) {
+                console.warn("Blocked blind overwrite to Firebase.");
+                throw new Error("لا يمكن الحفظ قبل اكتمال جلب البيانات من السحابة.");
+            }
+
             try {
                 const cloudStatus = document.getElementById('cloud-status');
                 if(cloudStatus) { cloudStatus.classList.remove('hidden'); cloudStatus.innerHTML = '<i class="fa-solid fa-spinner fa-spin ml-1 text-blue-500"></i>جاري المزامنة...'; }
@@ -880,8 +946,10 @@
                 const docSnap = await getDoc(doc(db, "reports", "executive_dashboard"));
                 if (docSnap.exists()) {
                     window.appState = docSnap.data();
+                    window.isCloudReadComplete = true; // تم القراءة بنجاح، نفتح قفل الأمان
                     if(cloudStatus) cloudStatus.innerHTML = '<i class="fa-solid fa-cloud-arrow-down ml-1 text-emerald-500"></i>تم جلب البيانات';
                 } else {
+                    window.isCloudReadComplete = true; // المستند غير موجود أساساً، نفتح قفل الأمان للإنشاء
                     if(cloudStatus) cloudStatus.innerHTML = '<i class="fa-solid fa-cloud text-slate-300 ml-1"></i>بيانات محلية افتراضية';
                 }
                 
@@ -894,6 +962,7 @@
                 window.updateDashboard();
             } catch (e) {
                 console.error("Firebase load error:", e);
+                // في حالة فشل التحميل بسبب الإنترنت، يبقى القفل مفعلاً ولن يستطيع المستخدم مسح القاعدة
                 window.updateTitlesUI();
                 window.updateDashboard();
             }
@@ -937,8 +1006,35 @@
                 }
             });
 
+            // جلب البيانات من السحابة عند البداية
             await window.loadFromFirebase();
         });
+
+        // زر استعادة وتصحيح قاعدة البيانات (Recovery Button)
+        window.restore2026Data = function() {
+            window.requestAuth(async () => {
+                try {
+                    // استبدال الحالة الحالية بالقالب النظيف
+                    window.appState = JSON.parse(JSON.stringify(window.pure2026Template));
+                    
+                    // تحديث التواريخ
+                    window.fpStart.setDate(window.appState.dateStartStr, false);
+                    window.fpEnd.setDate(window.appState.dateEndStr, false);
+                    document.getElementById('ui-date-start').innerText = window.appState.dateStartStr;
+                    document.getElementById('ui-date-end').innerText = window.appState.dateEndStr;
+                    
+                    window.updateDashboard();
+                    
+                    // حفظ بالقوة الجبرية للسحابة (forcePush = true) لتخطي أي إقفال
+                    await window.saveToCloudSilently(true);
+                    window.isCloudReadComplete = true; // تم التصحيح والأمان مفتوح الآن
+                    
+                    window.showCustomAlert("تم استعادة بيانات 2026 الأصلية وتصحيح قاعدة البيانات السحابية بنجاح. النظام الآن يعمل بشكل سليم.", "تمت الاستعادة", "fa-check-double");
+                } catch(e) {
+                    window.showCustomAlert("فشل رفع النسخة للسحابة. تأكد من الإنترنت.", "خطأ فني", "fa-triangle-exclamation");
+                }
+            });
+        };
 
         // دوال نافذة تأكيد التاريخ المضافة حديثاً
         window.confirmDateChange = async function() {
@@ -968,7 +1064,7 @@
                 window.appState.dateEndStr = oldEnd;
                 window.fpStart.setDate(oldStart, false);
                 window.fpEnd.setDate(oldEnd, false);
-                window.showCustomAlert("فشل الحفظ في السحابة. يرجى التأكد من اتصالك بالإنترنت والمحاولة مجدداً.", "خطأ في المزامنة", "fa-triangle-exclamation");
+                // لا نظهر التنبيه هنا لأن دالة الحفظ الصامت ستظهره في حال الفشل
             } finally {
                 btn.innerHTML = origText;
                 btn.disabled = false;
