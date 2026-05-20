@@ -495,11 +495,22 @@
             <div class="flex-1 flex flex-col mt-2 mb-1 shrink-0 min-h-0">
                 <div class="flex items-center justify-between mb-2 shrink-0">
                     <h2 class="text-[15px] font-black text-[var(--charcoal-900)] flex items-center gap-2 border-r-4 border-[var(--gold-primary)] pr-2">
-                        <span id="text_timelineTitle">التتبع الزمني لمسار السيولة والأرصدة (للفترة المعروضة)</span>
+                        <span id="text_timelineTitle">التتبع الزمني لمسار السيولة والأرصدة</span>
                     </h2>
+                    
+                    <!-- أداة التحكم في طريقة العرض الجديدة -->
+                    <div class="no-print flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-2 py-1 shadow-sm">
+                        <i class="fa-solid fa-filter text-[var(--gold-dark)] text-[11px]"></i>
+                        <select id="timelineViewMode" onchange="window.updateDashboard()" class="text-[12px] font-bold text-slate-700 bg-transparent border-none outline-none cursor-pointer">
+                            <option value="monthly">عرض شهري (مفصل)</option>
+                            <option value="quarterly">عرض ربع سنوي</option>
+                            <option value="semi">عرض نصف سنوي</option>
+                            <option value="yearly">عرض سنوي (إجمالي)</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="flex-1 bg-white rounded-xl border border-slate-200 shadow-sm relative z-0 flex flex-col justify-center overflow-x-auto custom-scroll">
-                    <div id="timeline-container" class="relative w-full flex justify-between items-start px-6 min-w-max py-4">
+                    <div id="timeline-container" class="relative w-full flex justify-between items-start px-6 min-w-max py-4 snap-x snap-mandatory" style="scroll-behavior: smooth;">
                         <div class="w-full text-center py-10 text-slate-400 font-bold"><i class="fa-solid fa-spinner fa-spin text-xl"></i> جاري إعداد وتحديث مسار التدفقات...</div>
                     </div>
                 </div>
@@ -682,7 +693,7 @@
             </div>
         </div>
 
-        <!-- نافذة الإشعارات المخصصة (بديل الـ Alert) -->
+        <!-- الإشعارات المخصصة -->
         <div id="alertModal" class="modal-overlay no-print" style="z-index: 70;">
             <div class="bg-white rounded-xl shadow-2xl border border-slate-200 w-[350px] overflow-hidden transform scale-100">
                 <div class="bg-[var(--charcoal-900)] text-white px-5 py-3 flex items-center gap-2">
@@ -695,6 +706,25 @@
                     </p>
                     <div class="flex gap-2 mt-2">
                         <button onclick="closeCustomAlert()" class="flex-1 bg-[var(--gold-primary)] text-white py-2 rounded-lg text-[13px] font-bold hover:bg-[var(--gold-dark)] transition-colors">موافق</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- نافذة تأكيد المزامنة السحابية -->
+        <div id="confirmSyncModal" class="modal-overlay no-print" style="z-index: 65;">
+            <div class="bg-white rounded-xl shadow-2xl border border-slate-200 w-[380px] overflow-hidden transform scale-100">
+                <div class="bg-[var(--charcoal-900)] text-white px-5 py-3 flex items-center gap-2">
+                    <i class="fa-solid fa-cloud-arrow-up text-[var(--gold-primary)]"></i>
+                    <h3 class="font-bold text-[14px]">تأكيد الحفظ والمزامنة</h3>
+                </div>
+                <div class="p-5 flex flex-col gap-4">
+                    <p class="text-[13px] text-slate-600 font-bold text-center leading-relaxed">
+                        أنت على وشك حفظ التعديلات الحالية (أو البيانات المستوردة) في قاعدة البيانات السحابية بشكل نهائي. هل قمت بمراجعة البيانات وتود المتابعة؟
+                    </p>
+                    <div class="flex gap-2 mt-2">
+                        <button id="btnExecuteSync" onclick="executeManualSync()" class="flex-1 bg-[var(--gold-primary)] text-white py-2 rounded-lg text-[13px] font-bold hover:bg-[var(--gold-dark)] transition-colors flex justify-center items-center gap-2">نعم، حفظ واعتماد</button>
+                        <button onclick="document.getElementById('confirmSyncModal').classList.remove('active')" class="flex-1 bg-slate-100 text-slate-600 py-2 rounded-lg text-[13px] font-bold hover:bg-slate-200 transition-colors">إلغاء الأمر</button>
                     </div>
                 </div>
             </div>
@@ -727,7 +757,7 @@
         // متغير الحماية المطلق لمنع الكتابة العمياء فوق السحابة
         window.isCloudReadComplete = false;
 
-        // تفعيل زر الهروب (Esc)
+        // تفعيل زر الهروب (Esc) مع دعم النوافذ الجديدة
         document.addEventListener('keydown', function(event) {
             if (event.key === "Escape") {
                 const passwordModal = document.getElementById('passwordModal');
@@ -736,12 +766,14 @@
                 const confirmDateModal = document.getElementById('confirmDateModal');
                 const confirmOpenBalModal = document.getElementById('confirmOpenBalModal');
                 const alertModal = document.getElementById('alertModal');
+                const confirmSyncModal = document.getElementById('confirmSyncModal');
                 
                 if (alertModal && alertModal.classList.contains('active')) window.closeCustomAlert();
                 else if (passwordModal.classList.contains('active')) window.closePasswordModal();
                 else if (openBalanceModal && openBalanceModal.classList.contains('active')) window.closeOpenBalanceModal();
                 else if (confirmOpenBalModal && confirmOpenBalModal.classList.contains('active')) window.cancelSaveOpeningBalance();
                 else if (confirmDateModal && confirmDateModal.classList.contains('active')) window.cancelDateChange();
+                else if (confirmSyncModal && confirmSyncModal.classList.contains('active')) confirmSyncModal.classList.remove('active');
                 else if (detailsModal.classList.contains('active')) window.closeDetails();
             }
         });
@@ -761,7 +793,54 @@
         // قاموس الأشهر لترجمة النصوص إلى تواريخ للمقارنة والفلاتر
         const arMonthsMap = { 'يناير':0, 'فبراير':1, 'مارس':2, 'أبريل':3, 'مايو':4, 'يونيو':5, 'يوليو':6, 'أغسطس':7, 'سبتمبر':8, 'أكتوبر':9, 'نوفمبر':10, 'ديسمبر':11 };
 
-        // قالب النجاة (Backup Template): يحتوي على بيانات 2026 كاملة ونظيفة
+        // اختصارات إنجليزية ثابتة لكل شهر — تُستخدم لبناء مفتاح ثابت (key) عند استيراد شهر محذوف وإعادته
+        const arMonthShortEn = { 'يناير':'jan', 'فبراير':'feb', 'مارس':'mar', 'أبريل':'apr', 'مايو':'may', 'يونيو':'jun', 'يوليو':'jul', 'أغسطس':'aug', 'سبتمبر':'sep', 'أكتوبر':'oct', 'نوفمبر':'nov', 'ديسمبر':'dec' };
+
+        // محلِّل ترويسة عمود إكسل: يستخرج اسم الشهر العربي والسنة من نص مثل "مايو 26" أو "مايو2026" أو "مايو 2026"
+        window.parseMonthHeader = function(headStr) {
+            if (!headStr) return null;
+            let s = headStr.toString().replace(/[\u200B-\u200D\uFEFF]/g, '').trim();
+            // تحويل الأرقام العربية إلى لاتينية
+            s = s.replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d).toString());
+            s = s.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d).toString());
+
+            // التقاط اسم الشهر العربي
+            let foundName = null;
+            for (const n of Object.keys(arMonthsMap)) {
+                if (s.includes(n)) { foundName = n; break; }
+            }
+            if (!foundName) return null;
+
+            // التقاط السنة (4 خانات أو 2 خانة)
+            const yearMatch = s.match(/(20\d{2})|(\d{2})(?!\d)/);
+            let year;
+            if (yearMatch) {
+                if (yearMatch[1]) {
+                    year = yearMatch[1];
+                } else {
+                    // سنة من رقمين → افتراض القرن 20xx
+                    year = '20' + yearMatch[2];
+                }
+            } else {
+                // لا توجد سنة في الترويسة → افتراض السنة من الأشهر الموجودة حالياً (أحدثها)
+                const current = window.appState && window.appState.months && window.appState.months.length
+                    ? window.appState.months[0].year
+                    : (new Date()).getFullYear().toString();
+                year = current;
+            }
+
+            return { name: foundName, year: year };
+        };
+
+        // مولِّد مفتاح ثابت للشهر (مطابق لتنسيق القالب الأصلي: may26, jun26, ...)
+        window.buildMonthKey = function(name, year) {
+            const shortEn = arMonthShortEn[name];
+            if (!shortEn) return 'm_' + Math.random().toString(36).substr(2, 5);
+            const yy = year.toString().slice(-2);
+            return shortEn + yy;
+        };
+
+        // قالب النجاة (Backup Template)
         window.pure2026Template = {
             openBalance: 0,
             dateStartStr: "01 May 2026",
@@ -782,7 +861,7 @@
                 secInvSub: "الأصول الثابتة والمشاريع",
                 secFinTitle: "الأنشطة التمويلية",
                 secFinSub: "التمويل والقروض",
-                timelineTitle: "التتبع الزمني لمسار السيولة والأرصدة (للفترة المعروضة)",
+                timelineTitle: "التتبع الزمني لمسار السيولة والأرصدة",
                 footerText: "قائمة التدفقات النقدية",
                 companyName: "شركة اتحاد الراجحي"
             },
@@ -855,16 +934,13 @@
         window.isEditMode = false;
         window.pendingAuthCallback = null;
 
-        // متغيرات مؤقتة لتأكيد تغيير التاريخ
         window.pendingStartDate = null;
         window.pendingEndDate = null;
 
-        // دالة الفلترة الديناميكية - تستخرج الأشهر المطلوبة فقط للعرض وتترك الباقي في الذاكرة
         window.getVisibleMonths = function() {
             const startDate = new Date(window.appState.dateStartStr);
             const endDate = new Date(window.appState.dateEndStr);
             
-            // ضبط للبداية والنهاية لضمان شمولية الشهر كامل
             const sTime = new Date(startDate.getFullYear(), startDate.getMonth(), 1).getTime();
             const eTime = new Date(endDate.getFullYear(), endDate.getMonth(), 28).getTime(); 
 
@@ -878,16 +954,13 @@
             });
         }
 
-        // حساب الرصيد الافتتاحي التراكمي الدقيق لبداية الفترة المحددة
         window.calculatePeriodOpeningBalance = function() {
-            // استخدام parseFloat لتجنب أي عملية دمج نصوص خاطئة (String Concatenation) من بيانات السحابة
             let globalBal = parseFloat(window.appState.openBalance) || 0;
             const startDate = new Date(window.appState.dateStartStr);
             const sTime = new Date(startDate.getFullYear(), startDate.getMonth(), 1).getTime();
 
             window.appState.months.forEach(m => {
                 const mTime = new Date(parseInt(m.year), arMonthsMap[m.name], 1).getTime();
-                // إذا كان الشهر يسبق تاريخ بداية العرض، نقوم بجمع تدفقاته وإضافتها للرصيد
                 if (mTime < sTime) {
                     let netCash = 0;
                     ['opRec', 'invRec', 'finRec'].forEach(cat => {
@@ -902,10 +975,7 @@
             return globalBal;
         }
 
-        // حفظ صامت للسحابة لتجنب تكرار الكود
-        // قفل أمان (forcePush): لا يمكن حفظ بيانات قديمة عن طريق الخطأ
         window.saveToCloudSilently = async function(forcePush = false) {
-            // التحقق من قفل الأمان: هل اكتمل جلب السحابة؟ إذا لا، نمنع الحفظ لتفادي مسح البيانات القديمة
             if (!window.isCloudReadComplete && !forcePush) {
                 console.warn("Blocked blind overwrite to Firebase.");
                 throw new Error("لا يمكن الحفظ قبل اكتمال جلب البيانات من السحابة.");
@@ -928,14 +998,27 @@
             }
         }
 
-        // الحفظ اليدوي للسحابة
         window.requestManualSync = function() {
-            window.requestAuth(async () => {
-                try {
-                    await window.saveToCloudSilently();
-                    window.showCustomAlert("تم حفظ جميع التحديثات والبيانات في السحابة بنجاح.", "نجاح الحفظ", "fa-circle-check");
-                } catch(e) {}
+            window.requestAuth(() => {
+                document.getElementById('confirmSyncModal').classList.add('active');
             });
+        };
+
+        window.executeManualSync = async function() {
+            const btn = document.getElementById('btnExecuteSync');
+            const origText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري الرفع...';
+            btn.disabled = true;
+
+            try {
+                await window.saveToCloudSilently();
+                document.getElementById('confirmSyncModal').classList.remove('active');
+                window.showCustomAlert("تم اعتماد البيانات وحفظها في قاعدة البيانات السحابية بنجاح.", "تم الاعتماد", "fa-circle-check");
+            } catch(e) {
+            } finally {
+                btn.innerHTML = origText;
+                btn.disabled = false;
+            }
         };
 
         window.loadFromFirebase = async function() {
@@ -946,10 +1029,10 @@
                 const docSnap = await getDoc(doc(db, "reports", "executive_dashboard"));
                 if (docSnap.exists()) {
                     window.appState = docSnap.data();
-                    window.isCloudReadComplete = true; // تم القراءة بنجاح، نفتح قفل الأمان
+                    window.isCloudReadComplete = true; 
                     if(cloudStatus) cloudStatus.innerHTML = '<i class="fa-solid fa-cloud-arrow-down ml-1 text-emerald-500"></i>تم جلب البيانات';
                 } else {
-                    window.isCloudReadComplete = true; // المستند غير موجود أساساً، نفتح قفل الأمان للإنشاء
+                    window.isCloudReadComplete = true; 
                     if(cloudStatus) cloudStatus.innerHTML = '<i class="fa-solid fa-cloud text-slate-300 ml-1"></i>بيانات محلية افتراضية';
                 }
                 
@@ -962,7 +1045,6 @@
                 window.updateDashboard();
             } catch (e) {
                 console.error("Firebase load error:", e);
-                // في حالة فشل التحميل بسبب الإنترنت، يبقى القفل مفعلاً ولن يستطيع المستخدم مسح القاعدة
                 window.updateTitlesUI();
                 window.updateDashboard();
             }
@@ -979,7 +1061,6 @@
                 disableMobile: true,
                 onChange: function(selectedDates, dateStr) {
                     window.pendingStartDate = dateStr;
-                    // الانتقال التلقائي لتاريخ الانتهاء بعد اختيار تاريخ البدء
                     setTimeout(() => {
                         window.fpEnd.open();
                     }, 100);
@@ -992,11 +1073,7 @@
                 disableMobile: true,
                 onChange: function(selectedDates, dateStr) {
                     window.pendingEndDate = dateStr;
-                    
-                    // إذا لم يتم تعديل تاريخ البدء، نعتمد التاريخ الحالي
                     if (!window.pendingStartDate) window.pendingStartDate = window.appState.dateStartStr;
-
-                    // إظهار نافذة التأكيد فقط إذا تم فعلاً اختيار نطاق مختلف
                     if (window.pendingStartDate !== window.appState.dateStartStr || window.pendingEndDate !== window.appState.dateEndStr) {
                         document.getElementById('confirmDateModal').classList.add('active');
                     } else {
@@ -1006,18 +1083,14 @@
                 }
             });
 
-            // جلب البيانات من السحابة عند البداية
             await window.loadFromFirebase();
         });
 
-        // زر استعادة وتصحيح قاعدة البيانات (Recovery Button)
         window.restore2026Data = function() {
             window.requestAuth(async () => {
                 try {
-                    // استبدال الحالة الحالية بالقالب النظيف
                     window.appState = JSON.parse(JSON.stringify(window.pure2026Template));
                     
-                    // تحديث التواريخ
                     window.fpStart.setDate(window.appState.dateStartStr, false);
                     window.fpEnd.setDate(window.appState.dateEndStr, false);
                     document.getElementById('ui-date-start').innerText = window.appState.dateStartStr;
@@ -1025,9 +1098,8 @@
                     
                     window.updateDashboard();
                     
-                    // حفظ بالقوة الجبرية للسحابة (forcePush = true) لتخطي أي إقفال
                     await window.saveToCloudSilently(true);
-                    window.isCloudReadComplete = true; // تم التصحيح والأمان مفتوح الآن
+                    window.isCloudReadComplete = true; 
                     
                     window.showCustomAlert("تم استعادة بيانات 2026 الأصلية وتصحيح قاعدة البيانات السحابية بنجاح. النظام الآن يعمل بشكل سليم.", "تمت الاستعادة", "fa-check-double");
                 } catch(e) {
@@ -1036,7 +1108,6 @@
             });
         };
 
-        // دوال نافذة تأكيد التاريخ المضافة حديثاً
         window.confirmDateChange = async function() {
             const btn = document.getElementById('confirmDateBtn');
             const origText = btn.innerHTML;
@@ -1049,22 +1120,18 @@
             if (window.pendingStartDate) window.appState.dateStartStr = window.pendingStartDate;
             if (window.pendingEndDate) window.appState.dateEndStr = window.pendingEndDate;
 
-            // حفظ سحابي مباشر وإشعار للنجاح
             try {
                 await window.saveToCloudSilently();
-                // لن نحدث اللوحة إلا إذا تم الحفظ بنجاح
                 document.getElementById('ui-date-start').innerText = window.appState.dateStartStr;
                 document.getElementById('ui-date-end').innerText = window.appState.dateEndStr;
                 window.updateDashboard();
                 document.getElementById('confirmDateModal').classList.remove('active');
                 window.showCustomAlert("تم تغيير النطاق الزمني وحفظه كإعداد افتراضي في السحابة.", "تحديث النطاق الزمني", "fa-calendar-check");
             } catch(e) {
-                // تراجع محلي في حال فشل الحفظ
                 window.appState.dateStartStr = oldStart;
                 window.appState.dateEndStr = oldEnd;
                 window.fpStart.setDate(oldStart, false);
                 window.fpEnd.setDate(oldEnd, false);
-                // لا نظهر التنبيه هنا لأن دالة الحفظ الصامت ستظهره في حال الفشل
             } finally {
                 btn.innerHTML = origText;
                 btn.disabled = false;
@@ -1075,16 +1142,12 @@
 
         window.cancelDateChange = function() {
             document.getElementById('confirmDateModal').classList.remove('active');
-            
-            // إعادة الفلاتبيكر لتواريخه القديمة
             window.fpStart.setDate(window.appState.dateStartStr, false);
             window.fpEnd.setDate(window.appState.dateEndStr, false);
-            
             window.pendingStartDate = null;
             window.pendingEndDate = null;
         };
 
-        // دوال مساعدة للتنسيق
         window.formatCurr = function(num) {
             const formatted = new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Math.abs(num));
             return num < 0 ? `-${formatted}` : formatted;
@@ -1092,24 +1155,16 @@
         window.parseFormatted = function(val) {
             if(typeof val === 'number') return val;
             let str = val.toString().trim();
-            
-            // تحويل الأرقام العربية/الفارسية إلى إنجليزية لضمان صحة المعالجة الحسابية
             str = str.replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
             str = str.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d));
-            
             let isNegative = str.startsWith('-') || (str.startsWith('(') && str.endsWith(')'));
-            
-            // تنظيف النص من أي شيء عدا الأرقام والنقطة العشرية
             let cleanStr = str.replace(/[^0-9.]/g, '');
-            // معالجة حالة وجود أكثر من نقطة عشرية بالخطأ
             let parts = cleanStr.split('.');
             let numStr = parts[0] + (parts.length > 1 ? '.' + parts[1] : '');
-            
             let num = parseFloat(numStr) || 0;
             return isNegative ? -num : num;
         }
         
-        // يعتمد الحساب الآن على الأشهر المرئية فقط
         window.getItemTotalVisible = function(item, visibleMonths) {
             return visibleMonths.reduce((sum, m) => sum + (parseFloat(item[m.key]) || 0), 0);
         }
@@ -1174,43 +1229,81 @@
             tlContainer.innerHTML = '';
             
             if(visibleMonths.length === 0) {
-                tlContainer.innerHTML = '<div class="w-full text-center py-10 text-slate-400 font-bold">لا توجد أشهر ضمن النطاق الزمني المحدد للعرض.</div>';
+                tlContainer.innerHTML = '<div class="w-full text-center py-10 text-slate-400 font-bold">لا توجد بيانات للعرض في هذا النطاق الزمني.</div>';
                 return;
             }
 
-            tlContainer.innerHTML += `<div class="absolute top-[31px] left-[40px] right-[40px] border-t-[3px] border-dashed border-slate-300 -z-10"></div>`;
+            const viewMode = document.getElementById('timelineViewMode') ? document.getElementById('timelineViewMode').value : 'monthly';
+            
+            let groups = [];
+            
+            if (viewMode === 'monthly') {
+                groups = visibleMonths.map(m => ({ label: m.name, sub: m.year, months: [m] }));
+            } 
+            else if (viewMode === 'quarterly') {
+                const qMap = {'يناير':'الربع الأول','فبراير':'الربع الأول','مارس':'الربع الأول', 'أبريل':'الربع الثاني','مايو':'الربع الثاني','يونيو':'الربع الثاني', 'يوليو':'الربع الثالث','أغسطس':'الربع الثالث','سبتمبر':'الربع الثالث', 'أكتوبر':'الربع الرابع','نوفمبر':'الربع الرابع','ديسمبر':'الربع الرابع'};
+                visibleMonths.forEach(m => {
+                    let qName = qMap[m.name] || 'أخرى';
+                    let groupKey = qName + " " + m.year;
+                    let existing = groups.find(g => g.key === groupKey);
+                    if (existing) existing.months.push(m);
+                    else groups.push({ key: groupKey, label: qName, sub: m.year, months: [m] });
+                });
+            }
+            else if (viewMode === 'semi') {
+                const sMap = {'يناير':'النصف الأول','فبراير':'النصف الأول','مارس':'النصف الأول','أبريل':'النصف الأول','مايو':'النصف الأول','يونيو':'النصف الأول', 'يوليو':'النصف الثاني','أغسطس':'النصف الثاني','سبتمبر':'النصف الثاني','أكتوبر':'النصف الثاني','نوفمبر':'النصف الثاني','ديسمبر':'النصف الثاني'};
+                visibleMonths.forEach(m => {
+                    let sName = sMap[m.name] || 'أخرى';
+                    let groupKey = sName + " " + m.year;
+                    let existing = groups.find(g => g.key === groupKey);
+                    if (existing) existing.months.push(m);
+                    else groups.push({ key: groupKey, label: sName, sub: m.year, months: [m] });
+                });
+            }
+            else if (viewMode === 'yearly') {
+                visibleMonths.forEach(m => {
+                    let groupKey = "عام " + m.year;
+                    let existing = groups.find(g => g.key === groupKey);
+                    if (existing) existing.months.push(m);
+                    else groups.push({ key: groupKey, label: "إجمالي العام", sub: m.year, months: [m] });
+                });
+            }
+
+            tlContainer.innerHTML += `<div class="absolute top-[31px] left-[20px] right-[20px] border-t-[3px] border-dashed border-slate-300 -z-10"></div>`;
 
             let currentBalance = startBalance;
 
-            visibleMonths.forEach((m, idx) => {
-                const isLast = idx === visibleMonths.length - 1;
-                
+            groups.forEach((g, idx) => {
+                const isLast = idx === groups.length - 1;
                 let netCash = 0;
-                ['opRec', 'invRec', 'finRec'].forEach(cat => {
-                    netCash += window.appState[cat].reduce((sum, item) => sum + (parseFloat(item[m.key]) || 0), 0);
-                });
-                ['opPay', 'invPay', 'finPay'].forEach(cat => {
-                    netCash -= window.appState[cat].reduce((sum, item) => sum + (parseFloat(item[m.key]) || 0), 0);
+                
+                g.months.forEach(m => {
+                    ['opRec', 'invRec', 'finRec'].forEach(cat => {
+                        netCash += window.appState[cat].reduce((sum, item) => sum + (parseFloat(item[m.key]) || 0), 0);
+                    });
+                    ['opPay', 'invPay', 'finPay'].forEach(cat => {
+                        netCash -= window.appState[cat].reduce((sum, item) => sum + (parseFloat(item[m.key]) || 0), 0);
+                    });
                 });
 
                 currentBalance += netCash;
                 const netColor = netCash < 0 ? 'text-[var(--danger)]' : 'text-[var(--charcoal-900)]';
 
                 tlContainer.innerHTML += `
-                    <div class="flex flex-col items-center relative group min-w-[170px] flex-1">
+                    <div class="flex flex-col items-center relative group min-w-[170px] flex-1 shrink-0 px-2 snap-center">
                         <div class="w-[64px] h-[64px] ${isLast ? 'bg-[var(--gold-primary)] border-[3px] border-white outline outline-2 outline-[var(--gold-primary)]' : 'bg-white rounded-full border-[3px] border-slate-200 hover:border-[var(--gold-primary)]'} shadow-sm flex flex-col items-center justify-center mb-3 transition-all duration-300 z-10 ${isLast ? 'rounded-full' : ''} group-hover:scale-105">
-                            <span class="text-[12px] font-black ${isLast ? 'text-white' : 'text-slate-800'} leading-tight">${m.name}</span>
-                            <span class="text-[9px] font-bold ${isLast ? 'text-[#FEF08A]' : 'text-slate-400'} font-numbers">${m.year}</span>
+                            <span class="text-[11px] font-black ${isLast ? 'text-white' : 'text-slate-800'} leading-tight text-center px-1">${g.label}</span>
+                            <span class="text-[9px] font-bold ${isLast ? 'text-[#FEF08A]' : 'text-slate-400'} font-numbers mt-0.5">${g.sub}</span>
                         </div>
                         <div class="bg-white border ${isLast ? 'border-[var(--gold-primary)] shadow-md' : 'border-slate-100 shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)]'} rounded-xl p-2.5 w-[150px] transition-all duration-300 relative group-hover:-translate-y-1 group-hover:shadow-lg">
                             <div class="absolute top-0 left-0 right-0 ${isLast ? 'h-1.5 bg-[var(--gold-primary)]' : 'h-1 bg-slate-200 group-hover:bg-[var(--gold-primary)] transition-colors'} rounded-t-xl"></div>
                             <div class="flex flex-col gap-1.5 mt-1">
                                 <div class="flex flex-col items-center bg-slate-50 py-1.5 px-1 rounded-lg border border-slate-100">
-                                    <span class="text-[10px] text-slate-500 font-bold mb-0.5">صافي حركة الشهر</span>
+                                    <span class="text-[10px] text-slate-500 font-bold mb-0.5">صافي حركة الفترة</span>
                                     <span class="font-numbers font-black text-[12px] ${netColor} tracking-tighter" dir="ltr">${window.formatCurr(netCash)}</span>
                                 </div>
                                 <div class="flex flex-col items-center ${isLast ? 'bg-[var(--gold-primary)]/10 py-1.5 px-1 rounded-lg border border-[var(--gold-primary)]/30' : 'bg-slate-50 py-1.5 px-1 rounded-lg border border-slate-100'}">
-                                    <span class="text-[10px] ${isLast ? 'text-[var(--gold-dark)]' : 'text-slate-500'} font-bold mb-0.5">الرصيد التراكمي بنهايته</span>
+                                    <span class="text-[10px] ${isLast ? 'text-[var(--gold-dark)]' : 'text-slate-500'} font-bold mb-0.5">الرصيد التراكمي بنهايتها</span>
                                     <span class="font-numbers font-black text-[12px] ${isLast ? 'text-[var(--gold-dark)]' : 'text-[var(--charcoal-900)]'}" dir="ltr">${window.formatCurr(currentBalance)}</span>
                                 </div>
                             </div>
@@ -1438,11 +1531,10 @@
         window.handleInputAmount = function(index, monthKey, valString) {
             let parsed = window.parseFormatted(valString);
             const isExpense = ['opPay', 'invPay', 'finPay'].includes(window.currentActiveCategory);
-            if (isExpense) parsed = Math.abs(parsed); // Always store as positive
+            if (isExpense) parsed = Math.abs(parsed); 
             
             window.appState[window.currentActiveCategory][index][monthKey] = parsed;
             document.getElementById('cloud-status').innerHTML = '<i class="fa-solid fa-triangle-exclamation text-orange-400 ml-1"></i>توجد تغييرات غير محفوظة';
-            // تحديث مجاميع الواجهة محلياً
             window.renderDetailsList(window.getVisibleMonths());
         }
 
@@ -1552,7 +1644,6 @@
             document.getElementById('openBalanceModal').classList.remove('active');
         }
 
-        // التعديل الجديد: طلب التأكيد قبل الحفظ السحابي
         window.pendingOpenBalanceValue = null;
 
         window.preSaveOpeningBalance = function() {
@@ -1573,20 +1664,15 @@
                 btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري الحفظ...';
                 btn.disabled = true;
 
-                // نحتفظ بالقيمة القديمة لكي نتراجع عنها إذا رفضت السحابة الاتصال
                 const oldBalance = window.appState.openBalance;
-                // إجبار التحويل إلى رقم صافي 100%
                 window.appState.openBalance = Number(window.pendingOpenBalanceValue);
                 
                 try {
-                    // الانتظار الحقيقي للحفظ السحابي
                     await window.saveToCloudSilently();
-                    // التحديث الفوري للوحة فقط بعد التأكد من الحفظ السحابي
                     window.updateDashboard(); 
                     document.getElementById('confirmOpenBalModal').classList.remove('active');
                     window.showCustomAlert("تم تعديل قيمة الرصيد الافتتاحي وحفظه في السحابة بنجاح.", "تحديث الرصيد", "fa-check-circle");
                 } catch (e) {
-                    // التراجع عن التعديل الوهمي لو فشل الحفظ
                     window.appState.openBalance = oldBalance;
                     window.showCustomAlert("فشل الحفظ في السحابة. يرجى التأكد من اتصالك بالإنترنت والمحاولة مجدداً.", "خطأ في المزامنة", "fa-triangle-exclamation");
                 } finally {
@@ -1608,9 +1694,8 @@
         window.exportToExcel = function() {
             window.requestAuth(() => {
                 try {
-                    // إعداد الترويسة (أسماء الأعمدة) لتتطابق مع ما تتوقعه دالة الاستيراد
                     let headers = ["البيان", "التصنيف (للمرجعية فقط)"];
-                    window.appState.months.forEach(m => headers.push(m.label)); // مثال: مايو 26
+                    window.appState.months.forEach(m => headers.push(m.label)); 
 
                     let excelData = [headers];
 
@@ -1624,7 +1709,6 @@
                     };
                     const categories = ['opRec', 'opPay', 'invRec', 'invPay', 'finRec', 'finPay'];
 
-                    // تعبئة البيانات
                     categories.forEach(cat => {
                         window.appState[cat].forEach(item => {
                             let row = [item.name, catNames[cat]];
@@ -1635,22 +1719,29 @@
                         });
                     });
 
-                    // إنشاء ورقة العمل (Worksheet)
                     const ws = XLSX.utils.aoa_to_sheet(excelData);
-                    
-                    // دعم اتجاه النص من اليمين لليسار (RTL) في الإكسل
                     ws['!dir'] = 'rtl';
-                    
-                    // تعديل عرض الأعمدة لتبدو مرتبة
                     ws['!cols'] = [{wch: 40}, {wch: 25}];
                     window.appState.months.forEach(() => ws['!cols'].push({wch: 15}));
 
-                    // إنشاء ملف الإكسل (Workbook)
                     const wb = XLSX.utils.book_new();
                     XLSX.utils.book_append_sheet(wb, ws, "التدفقات النقدية");
 
-                    // تحميل الملف للمستخدم
-                    XLSX.writeFile(wb, "قالب_وتمبلت_التدفقات_النقدية.xlsx");
+                    // الحل الجذري لتخطي حظر التحميل الصامت للمتصفحات (Blob Method)
+                    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+                    const blob = new Blob([wbout], { type: "application/octet-stream" });
+                    const url = window.URL.createObjectURL(blob);
+                    
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = "قالب_وتمبلت_التدفقات_النقدية.xlsx";
+                    document.body.appendChild(a);
+                    a.click();
+                    
+                    setTimeout(() => {
+                        document.body.removeChild(a);
+                        window.URL.revokeObjectURL(url);
+                    }, 100);
                     
                     window.showCustomAlert("تم تصدير البيانات إلى ملف إكسل بنجاح.\nيمكنك تعديل الأرقام في هذا الملف وإعادة استيراده لاحقاً كقالب جاهز.", "تصدير ناجح", "fa-file-export");
 
@@ -1662,7 +1753,7 @@
         };
 
         // ===============================================
-        // منطق قراءة بيانات الإكسل واستخلاصها الذكي
+        // منطق قراءة بيانات الإكسل واستخلاصها الذكي (الحل الجذري النهائي)
         // ===============================================
         window.handleExcelImport = function(event) {
             const file = event.target.files[0];
@@ -1673,49 +1764,234 @@
                 reader.onload = function(e) {
                     try {
                         const data = new Uint8Array(e.target.result);
-                        const workbook = XLSX.read(data, {type: 'array'});
+                        // استخدام raw: false يجبر مكتبة القراءة على سحب الأرقام والنصوص كما تراها عينك في الإكسل تماماً لتفادي تحويلات التواريخ
+                        const workbook = XLSX.read(data, {type: 'array', cellDates: false});
                         const firstSheetName = workbook.SheetNames[0];
                         const worksheet = workbook.Sheets[firstSheetName];
-                        // قراءة الشيت كمنظومة من الكائنات (JSON)
-                        const json = XLSX.utils.sheet_to_json(worksheet);
+                        
+                        // استخراج البيانات كصفوف وأعمدة صريحة
+                        const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false, defval: "" });
 
-                        let updatedCount = 0;
+                        if (rows.length < 2) {
+                            window.showCustomAlert("الملف المرفوع فارغ أو لا يحتوي على بنية البيانات المتوقعة.", "تنبيه", "fa-xmark");
+                            return;
+                        }
 
-                        // الدوران على كل صف مستخرج من الإكسل
-                        json.forEach(row => {
-                            const itemName = row["البيان"] || row["البند"] || row["Name"];
-                            if (!itemName) return; // تخطي إذا لم يوجد اسم للبند
+                        const headers = rows[0];
+                        let cellsUpdated = 0;
+                        const categories = ['opRec', 'opPay', 'invRec', 'invPay', 'finRec', 'finPay'];
 
-                            // البحث عن البند في جميع تصنيفات النظام
+                        // ===============================================================
+                        // (الإصلاح الجذري) — المزامنة الكاملة: الملف هو المصدر الوحيد للحقيقة
+                        // مع دعم استعادة الأشهر التي حُذفت سابقاً (Resurrection)
+                        // ===============================================================
+
+                        // 1) تحليل ترويسات الأعمدة لاستخراج (الاسم، السنة) لكل شهر في الملف
+                        //    إذا لم يكن الشهر موجوداً في appState.months حالياً، يتم إعادة إنشائه (resurrect)
+                        //    بمفتاح ثابت مطابق لتنسيق القالب — هذا يضمن أن إعادة استيراد الملف الأصلي
+                        //    تُرجع كل البيانات حتى لو سبق وتم استيراد ملف فيه أشهر محذوفة
+                        const importedMonths = []; // ترتيب الأعمدة كما في الملف
+                        const colIndexToMonthKey = {};
+                        const importedMonthKeysSet = new Set();
+                        let resurrectedCount = 0;
+
+                        for (let c = 2; c < headers.length; c++) {
+                            let headStr = headers[c] ? headers[c].toString() : "";
+                            if (!headStr.trim()) continue;
+
+                            // تحليل الترويسة ذكياً لاستخراج اسم الشهر والسنة
+                            const parsed = window.parseMonthHeader(headStr);
+                            if (!parsed) continue;
+
+                            // البحث عن الشهر في القائمة الحالية بمطابقة (الاسم + السنة)
+                            let monthEntry = window.appState.months.find(m =>
+                                m.name === parsed.name && m.year === parsed.year
+                            );
+
+                            // لو لم يوجد → استعادته بإعادة إنشائه (resurrect) بمفتاح ثابت
+                            if (!monthEntry) {
+                                const newKey = window.buildMonthKey(parsed.name, parsed.year);
+                                monthEntry = {
+                                    key: newKey,
+                                    name: parsed.name,
+                                    year: parsed.year,
+                                    label: `${parsed.name} ${parsed.year.slice(-2)}`
+                                };
+                                // إضافته إلى قائمة أشهر النظام (سيُعاد ترتيبها لاحقاً عبر getVisibleMonths)
+                                window.appState.months.push(monthEntry);
+                                // تهيئة قيم البند لهذا الشهر الجديد بصفر لجميع البنود
+                                ['opRec', 'opPay', 'invRec', 'invPay', 'finRec', 'finPay'].forEach(cat => {
+                                    window.appState[cat].forEach(item => {
+                                        if (item[newKey] === undefined) item[newKey] = 0;
+                                    });
+                                });
+                                resurrectedCount++;
+                            }
+
+                            colIndexToMonthKey[c] = monthEntry.key;
+                            if (!importedMonthKeysSet.has(monthEntry.key)) {
+                                importedMonths.push(monthEntry);
+                                importedMonthKeysSet.add(monthEntry.key);
+                            }
+                        }
+
+                        // 2) حماية: إن لم يتم التعرّف على أي شهر، أوقف العملية لتجنّب مسح البيانات
+                        if (importedMonths.length === 0) {
+                            window.showCustomAlert("لم يتم التعرّف على أي عمود شهر صالح في الملف المُستورد. تم إلغاء العملية للحفاظ على بياناتك الحالية.", "تنبيه", "fa-triangle-exclamation");
+                            document.getElementById('excelInput').value = '';
+                            return;
+                        }
+
+                        // 3) تصفير كل قيم كل البنود لكل الأشهر المستوردة (Full Sync)
+                        //    هذا يضمن أن أي خلية فارغة في الإكسل تُسجَّل = 0 (وليس الإبقاء على القيمة القديمة)
+                        const importedMonthKeys = importedMonths.map(m => m.key);
+                        categories.forEach(cat => {
+                            window.appState[cat].forEach(item => {
+                                importedMonthKeys.forEach(k => { item[k] = 0; });
+                            });
+                        });
+
+                        // 4) معالجة الصفوف وحقن الأرقام (الخلايا الفارغة تبقى صفراً من التصفير أعلاه)
+                        for (let r = 1; r < rows.length; r++) {
+                            const row = rows[r];
+                            let rawName = row[0];
+                            if (!rawName) continue;
+
+                            let cleanName = rawName.toString().replace(/[\u200B-\u200D\uFEFF]/g, '').replace(/\s+/g, ' ').trim();
+
                             let matchedItem = null;
-                            const categories = ['opRec', 'opPay', 'invRec', 'invPay', 'finRec', 'finPay'];
+                            let matchedCat = null;
+
                             categories.forEach(cat => {
-                                const found = window.appState[cat].find(i => i.name.trim() === itemName.trim());
-                                if (found) matchedItem = found;
+                                let found = window.appState[cat].find(i => i.name.replace(/\s+/g, ' ').trim() === cleanName);
+                                if (found) { matchedItem = found; matchedCat = cat; }
                             });
 
                             if (matchedItem) {
-                                // البند موجود، نبحث عن قيم الأشهر المتطابقة
-                                window.appState.months.forEach(m => {
-                                    // إذا كان الإكسل يحتوي على عمود مطابق لاسم الشهر (مثل: "نوفمبر 25" أو "نوفمبر 2025")
-                                    const mKeyExcel = row[m.label] || row[`${m.name} ${m.year}`];
-                                    if (mKeyExcel !== undefined) {
-                                        matchedItem[m.key] = Math.abs(parseFloat(mKeyExcel) || 0);
-                                        updatedCount++;
+                                for (let c in colIndexToMonthKey) {
+                                    const mKey = colIndexToMonthKey[c];
+                                    let cellVal = row[c];
+
+                                    if (cellVal !== undefined && cellVal !== null && cellVal.toString().trim() !== "") {
+                                        let s = cellVal.toString();
+                                        s = s.replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
+                                        s = s.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d));
+                                        s = s.replace(/,/g, '');
+                                        s = s.replace(/[^0-9.-]/g, '');
+
+                                        let parsedNum = parseFloat(s) || 0;
+
+                                        if (['opPay', 'invPay', 'finPay'].includes(matchedCat)) {
+                                            parsedNum = Math.abs(parsedNum);
+                                        }
+
+                                        matchedItem[mKey] = parsedNum;
+                                        cellsUpdated++;
                                     }
-                                });
+                                    // الخلية الفارغة = 0 (محفوظة من خطوة التصفير)
+                                }
                             }
+                        }
+
+                        // 5) (الإصلاح المحوري) — مزامنة قائمة الأشهر في النظام مع الملف
+                        //    حذف الأشهر التي ليست في الملف، والاحتفاظ بترتيب أعمدة الإكسل
+                        //    + إعادة ترتيب الأشهر زمنياً لضمان عرض صحيح
+                        const removedMonthKeys = window.appState.months
+                            .filter(m => !importedMonthKeysSet.has(m.key))
+                            .map(m => m.key);
+
+                        if (removedMonthKeys.length > 0) {
+                            // أبقِ فقط الأشهر التي وردت في الملف
+                            window.appState.months = importedMonths.slice();
+
+                            // تنظيف مفاتيح الأشهر المحذوفة من جميع البنود (نظافة بيانات)
+                            categories.forEach(cat => {
+                                window.appState[cat].forEach(item => {
+                                    removedMonthKeys.forEach(k => { delete item[k]; });
+                                });
+                            });
+                        }
+
+                        // إعادة ترتيب الأشهر زمنياً (مهم بعد استعادة الأشهر المحذوفة)
+                        window.appState.months.sort((a, b) => {
+                            const ta = new Date(parseInt(a.year), arMonthsMap[a.name], 1).getTime();
+                            const tb = new Date(parseInt(b.year), arMonthsMap[b.name], 1).getTime();
+                            return ta - tb;
                         });
 
-                        window.showCustomAlert(`تمت المعاينة بنجاح.\nتم تحديث قيم ${updatedCount} إدخال شهري للبنود المطابقة.\n\nتنبيه: راجع اللوحة، ثم اضغط (حفظ ومزامنة في السحابة) لاعتمادها.`, "تم الاستيراد", "fa-file-excel");
-                        
-                        document.getElementById('excelInput').value = ''; // تصفير الرفع
-                        window.updateDashboard(); // تحديث اللوحة بالبيانات الجديدة المستوردة
-                        document.getElementById('cloud-status').innerHTML = '<i class="fa-solid fa-triangle-exclamation text-orange-400 ml-1"></i>بانتظار مزامنة المستورد';
+                        // 5.1) توسيع نطاق التاريخ تلقائياً ليشمل كل الأشهر المستوردة
+                        //      (حتى لو كان النطاق الحالي أضيق من نطاق الملف، يتم توسيعه)
+                        //      هذا يضمن ظهور الأشهر المستعادة فوراً على الواجهة
+                        if (importedMonths.length > 0) {
+                            const sortedImported = importedMonths.slice().sort((a, b) => {
+                                const ta = new Date(parseInt(a.year), arMonthsMap[a.name], 1).getTime();
+                                const tb = new Date(parseInt(b.year), arMonthsMap[b.name], 1).getTime();
+                                return ta - tb;
+                            });
+                            const firstM = sortedImported[0];
+                            const lastM = sortedImported[sortedImported.length - 1];
+
+                            const enMonthsShort = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                            const newStartDate = new Date(parseInt(firstM.year), arMonthsMap[firstM.name], 1);
+                            const newEndDate = new Date(parseInt(lastM.year), arMonthsMap[lastM.name] + 1, 0); // آخر يوم من الشهر
+
+                            const fmt = (d) => {
+                                const dd = String(d.getDate()).padStart(2, '0');
+                                const mm = enMonthsShort[d.getMonth()];
+                                const yy = d.getFullYear();
+                                return `${dd} ${mm} ${yy}`;
+                            };
+
+                            const curStart = new Date(window.appState.dateStartStr);
+                            const curEnd = new Date(window.appState.dateEndStr);
+
+                            if (newStartDate < curStart) {
+                                window.appState.dateStartStr = fmt(newStartDate);
+                            }
+                            if (newEndDate > curEnd) {
+                                window.appState.dateEndStr = fmt(newEndDate);
+                            }
+
+                            // تحديث عناصر الواجهة الخاصة بالتاريخ (نص + flatpickr إن وُجد)
+                            const uiStart = document.getElementById('ui-date-start');
+                            const uiEnd = document.getElementById('ui-date-end');
+                            if (uiStart) uiStart.innerText = window.appState.dateStartStr;
+                            if (uiEnd) uiEnd.innerText = window.appState.dateEndStr;
+                            if (window.fpStart && typeof window.fpStart.setDate === 'function') window.fpStart.setDate(window.appState.dateStartStr, false);
+                            if (window.fpEnd && typeof window.fpEnd.setDate === 'function') window.fpEnd.setDate(window.appState.dateEndStr, false);
+                        }
+
+                        // 6) إعادة بناء الواجهة بالكامل لعكس التغييرات فوراً (KPIs + الجدول التفصيلي + الترويسة)
+                        //    ملاحظة: renderDetailsList تعتمد على currentActiveCategory ولن تعمل بأمان
+                        //    إلا حين يكون المودال مفتوحاً وقد تم اختيار تصنيف. لذا نُحدّث المودال فقط حين يكون مرئياً.
+                        const visibleMonths = window.getVisibleMonths();
+                        const detailsModalEl = document.getElementById('detailsModal');
+                        const isDetailsOpen = detailsModalEl && detailsModalEl.classList.contains('active') && !!window.currentActiveCategory;
+
+                        if (isDetailsOpen) {
+                            try {
+                                window.renderGridHeader(visibleMonths);
+                                window.renderDetailsList(visibleMonths);
+                            } catch (uiErr) {
+                                console.warn("UI refresh (details modal) skipped:", uiErr);
+                            }
+                        }
+
+                        window.updateDashboard();
+
+                        document.getElementById('excelInput').value = ''; // تصفير زر الرفع
+
+                        let extraMsg = "";
+                        if (removedMonthKeys.length > 0) extraMsg += `\nتمت إزالة (${removedMonthKeys.length}) شهر غير موجود في الملف.`;
+                        if (resurrectedCount > 0) extraMsg += `\nتمت استعادة (${resurrectedCount}) شهر إلى النظام من الملف.`;
+
+                        window.showCustomAlert(`تم الاستيراد بنجاح مطلق.\nتم قراءة وتطبيق (${cellsUpdated}) خلية رقمية من الملف المرفق.${extraMsg}\n\nالأرقام الآن معروضة أمامك، اضغط على زر الحفظ والمزامنة لاعتمادها في السحابة.`, "نجاح العملية", "fa-check-circle");
+                        document.getElementById('cloud-status').innerHTML = '<i class="fa-solid fa-triangle-exclamation text-orange-400 ml-1"></i>بانتظار المزامنة';
 
                     } catch(error) {
-                        console.error(error);
-                        window.showCustomAlert("حدث خطأ أثناء محاولة قراءة الملف. يرجى التأكد من أن الملف بصيغة إكسل صحيحة (XLSX).", "خطأ في الملف", "fa-file-circle-xmark");
+                        console.error("Fatal Import Error:", error);
+                        const detail = (error && error.message) ? `\n\nالتفصيل التقني: ${error.message}` : "";
+                        window.showCustomAlert("حدث خطأ تقني غير متوقع. يرجى التأكد من أن الملف هو قالب النظام وأنه غير تالف." + detail, "فشل الاستيراد", "fa-xmark-circle");
                     }
                 };
                 reader.readAsArrayBuffer(file);
