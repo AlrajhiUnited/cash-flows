@@ -521,9 +521,7 @@
         <!-- تذييل الصفحة -->
         <footer class="w-full px-10 flex justify-between items-center text-[13px] bg-white border-t border-slate-200 h-[60px] shrink-0 font-bold text-slate-500">
             <div class="w-1/4 text-right flex items-center gap-1">
-                <button onclick="restore2026Data()" class="no-print flex items-center gap-1.5 bg-purple-50 text-purple-600 border border-purple-200 px-3 py-1.5 rounded-lg text-[11px] font-bold hover:bg-purple-600 hover:text-white transition-all shadow-sm" title="استخدم هذا الزر لرفع البيانات المدمجة للسحابة لإصلاح التلبك">
-                    <i class="fa-solid fa-life-ring"></i> استعادة بيانات 2026 للسحابة
-                </button>
+                <!-- تم إزالة الزر من هنا بناءً على طلبك -->
             </div>
             <div class="w-2/4 flex justify-center items-center gap-3">
                 
@@ -1097,28 +1095,6 @@
             await window.loadFromFirebase();
         });
 
-        window.restore2026Data = function() {
-            window.requestAuth(async () => {
-                try {
-                    window.appState = JSON.parse(JSON.stringify(window.pure2026Template));
-                    
-                    window.fpStart.setDate(window.appState.dateStartStr, false);
-                    window.fpEnd.setDate(window.appState.dateEndStr, false);
-                    document.getElementById('ui-date-start').innerText = window.appState.dateStartStr;
-                    document.getElementById('ui-date-end').innerText = window.appState.dateEndStr;
-                    
-                    window.updateDashboard();
-                    
-                    await window.saveToCloudSilently(true);
-                    window.isCloudReadComplete = true; 
-                    
-                    window.showCustomAlert("تم استعادة بيانات 2026 الأصلية وتصحيح قاعدة البيانات السحابية بنجاح. النظام الآن يعمل بشكل سليم.", "تمت الاستعادة", "fa-check-double");
-                } catch(e) {
-                    window.showCustomAlert("فشل رفع النسخة للسحابة. السبب التقني:\n" + (e.message || "تأكد من الإنترنت."), "خطأ فني", "fa-triangle-exclamation");
-                }
-            });
-        };
-
         window.confirmDateChange = async function() {
             const btn = document.getElementById('confirmDateBtn');
             const origText = btn.innerHTML;
@@ -1377,7 +1353,7 @@
                 `;
             });
             
-            html += `<div class="text-[13px] font-black text-[var(--gold-dark)] bg-[var(--gold-primary)]/10 py-1 rounded min-w-0 truncate">الإجمالي المعروض</div>`;
+            html += `<div class="text-[13px] font-black text-[var(--gold-dark)] bg-[var(--gold-primary)]/10 py-1 px-1 rounded whitespace-nowrap text-center overflow-visible">الإجمالي المعروض</div>`;
             if (window.isEditMode) html += `<div class="min-w-0 shrink-0"></div>`; 
 
             header.innerHTML = html;
