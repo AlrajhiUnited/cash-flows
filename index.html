@@ -283,7 +283,7 @@
                 </div>
                 
                 <div class="flex items-center justify-center gap-3 z-10">
-                    <div class="relative flex flex-col items-center bg-slate-50 px-3 py-0.5 rounded border border-slate-200 hover:border-[var(--gold-primary)] transition-colors cursor-pointer group/date shadow-sm hover:shadow">
+                    <div class="relative flex flex-col items-center bg-slate-50 px-3 py-0.5 rounded border border-slate-200 hover:border-[var(--gold-primary)] transition-colors cursor-pointer group/date shadow-sm hover:shadow" onclick="document.getElementById('date-start-input')._flatpickr.open()">
                         <input type="text" id="date-start-input" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20">
                         <div class="flex items-center gap-1 z-10 pointer-events-none">
                             <span id="ui-date-start" class="font-numbers text-[13px] font-black text-[var(--charcoal-800)] transition-colors" dir="ltr">-- --- ----</span>
@@ -294,7 +294,7 @@
                         <i class="fa-solid fa-arrow-left-long text-[12px]"></i>
                     </div>
                     
-                    <div class="relative flex flex-col items-center bg-[var(--gold-primary)]/10 px-3 py-0.5 rounded border border-[var(--gold-primary)]/30 hover:bg-[var(--gold-primary)]/20 transition-colors cursor-pointer group/date shadow-sm hover:shadow">
+                    <div class="relative flex flex-col items-center bg-[var(--gold-primary)]/10 px-3 py-0.5 rounded border border-[var(--gold-primary)]/30 hover:bg-[var(--gold-primary)]/20 transition-colors cursor-pointer group/date shadow-sm hover:shadow" onclick="document.getElementById('date-end-input')._flatpickr.open()">
                         <input type="text" id="date-end-input" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20">
                         <div class="flex items-center gap-1 z-10 pointer-events-none">
                             <span id="ui-date-end" class="font-numbers text-[13px] font-black text-[var(--gold-dark)] transition-colors" dir="ltr">-- --- ----</span>
@@ -978,7 +978,7 @@
         window.saveToCloudSilently = async function(forcePush = false) {
             if (!window.isCloudReadComplete && !forcePush) {
                 console.warn("Blocked blind overwrite to Firebase.");
-                throw new Error("لا يمكن الحفظ قبل اكتمال جلب البيانات من السحابة.");
+                throw new Error("تم حظر الحفظ لتجنب مسح البيانات: لم يتم جلب البيانات الأساسية من السحابة مسبقاً (يرجى التأكد من أن قاعدة بيانات Firestore جاهزة ومفتوحة للقراءة والكتابة).");
             }
 
             try {
@@ -993,8 +993,7 @@
                 }
             } catch (e) {
                 console.error("Firebase save error:", e);
-                window.showCustomAlert("حدث خطأ أثناء الاتصال بقاعدة البيانات. يرجى التأكد من اتصالك بالإنترنت.", "خطأ في الاتصال", "fa-triangle-exclamation");
-                throw e;
+                throw e; // لتمرير رسالة الخطأ للنافذة المنبثقة
             }
         }
 
@@ -1011,10 +1010,11 @@
             btn.disabled = true;
 
             try {
-                await window.saveToCloudSilently();
+                await window.saveToCloudSilently(true); // فرض الحفظ بناءً على رغبة المستخدم
                 document.getElementById('confirmSyncModal').classList.remove('active');
                 window.showCustomAlert("تم اعتماد البيانات وحفظها في قاعدة البيانات السحابية بنجاح.", "تم الاعتماد", "fa-circle-check");
             } catch(e) {
+                window.showCustomAlert("فشل الحفظ والمزامنة. السبب التقني:\n" + (e.message || "تأكد من الإنترنت."), "خطأ فني", "fa-triangle-exclamation");
             } finally {
                 btn.innerHTML = origText;
                 btn.disabled = false;
@@ -1045,8 +1045,16 @@
                 window.updateDashboard();
             } catch (e) {
                 console.error("Firebase load error:", e);
+                const cloudStatus = document.getElementById('cloud-status');
+                if(cloudStatus) cloudStatus.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-red-500 ml-1"></i>خطأ في الاتصال';
+                
                 window.updateTitlesUI();
                 window.updateDashboard();
+                
+                // تنبيه فوري إذا كانت المشكلة من صلاحيات فايربيس
+                setTimeout(() => {
+                    window.showCustomAlert("فشل الاتصال بقاعدة البيانات السحابية. يرجى التأكد من صلاحيات (Firestore Rules) لتسمح بالقراءة والكتابة.\n\nالرسالة التقنية:\n" + e.message, "تنبيه قاعدة البيانات", "fa-database");
+                }, 1500);
             }
         };
 
@@ -1055,12 +1063,14 @@
 
             window.updateTitlesUI();
 
+            // إصلاح محوري: تفجير الـ Event وتوجيه التحديث المباشر للواجهة مع flatpickr
             window.fpStart = flatpickr("#date-start-input", {
                 dateFormat: "d M Y",
                 defaultDate: window.appState.dateStartStr,
                 disableMobile: true,
                 onChange: function(selectedDates, dateStr) {
                     window.pendingStartDate = dateStr;
+                    document.getElementById('ui-date-start').innerText = dateStr; 
                     setTimeout(() => {
                         window.fpEnd.open();
                     }, 100);
@@ -1073,6 +1083,7 @@
                 disableMobile: true,
                 onChange: function(selectedDates, dateStr) {
                     window.pendingEndDate = dateStr;
+                    document.getElementById('ui-date-end').innerText = dateStr; 
                     if (!window.pendingStartDate) window.pendingStartDate = window.appState.dateStartStr;
                     if (window.pendingStartDate !== window.appState.dateStartStr || window.pendingEndDate !== window.appState.dateEndStr) {
                         document.getElementById('confirmDateModal').classList.add('active');
@@ -1103,7 +1114,7 @@
                     
                     window.showCustomAlert("تم استعادة بيانات 2026 الأصلية وتصحيح قاعدة البيانات السحابية بنجاح. النظام الآن يعمل بشكل سليم.", "تمت الاستعادة", "fa-check-double");
                 } catch(e) {
-                    window.showCustomAlert("فشل رفع النسخة للسحابة. تأكد من الإنترنت.", "خطأ فني", "fa-triangle-exclamation");
+                    window.showCustomAlert("فشل رفع النسخة للسحابة. السبب التقني:\n" + (e.message || "تأكد من الإنترنت."), "خطأ فني", "fa-triangle-exclamation");
                 }
             });
         };
@@ -1121,7 +1132,7 @@
             if (window.pendingEndDate) window.appState.dateEndStr = window.pendingEndDate;
 
             try {
-                await window.saveToCloudSilently();
+                await window.saveToCloudSilently(true); // فرض المزامنة للتأريخ
                 document.getElementById('ui-date-start').innerText = window.appState.dateStartStr;
                 document.getElementById('ui-date-end').innerText = window.appState.dateEndStr;
                 window.updateDashboard();
@@ -1132,6 +1143,9 @@
                 window.appState.dateEndStr = oldEnd;
                 window.fpStart.setDate(oldStart, false);
                 window.fpEnd.setDate(oldEnd, false);
+                document.getElementById('ui-date-start').innerText = oldStart;
+                document.getElementById('ui-date-end').innerText = oldEnd;
+                window.showCustomAlert("تعذر حفظ النطاق الزمني في السحابة. السبب التقني:\n" + (e.message || "خطأ مجهول"), "خطأ في المزامنة", "fa-triangle-exclamation");
             } finally {
                 btn.innerHTML = origText;
                 btn.disabled = false;
@@ -1144,6 +1158,8 @@
             document.getElementById('confirmDateModal').classList.remove('active');
             window.fpStart.setDate(window.appState.dateStartStr, false);
             window.fpEnd.setDate(window.appState.dateEndStr, false);
+            document.getElementById('ui-date-start').innerText = window.appState.dateStartStr;
+            document.getElementById('ui-date-end').innerText = window.appState.dateEndStr;
             window.pendingStartDate = null;
             window.pendingEndDate = null;
         };
@@ -1156,7 +1172,7 @@
             if(typeof val === 'number') return val;
             let str = val.toString().trim();
             str = str.replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
-            str = str.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d));
+            str = str.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷٨٩'.indexOf(d));
             let isNegative = str.startsWith('-') || (str.startsWith('(') && str.endsWith(')'));
             let cleanStr = str.replace(/[^0-9.]/g, '');
             let parts = cleanStr.split('.');
@@ -1668,13 +1684,13 @@
                 window.appState.openBalance = Number(window.pendingOpenBalanceValue);
                 
                 try {
-                    await window.saveToCloudSilently();
+                    await window.saveToCloudSilently(true); // فرض المزامنة للرصيد
                     window.updateDashboard(); 
                     document.getElementById('confirmOpenBalModal').classList.remove('active');
                     window.showCustomAlert("تم تعديل قيمة الرصيد الافتتاحي وحفظه في السحابة بنجاح.", "تحديث الرصيد", "fa-check-circle");
                 } catch (e) {
                     window.appState.openBalance = oldBalance;
-                    window.showCustomAlert("فشل الحفظ في السحابة. يرجى التأكد من اتصالك بالإنترنت والمحاولة مجدداً.", "خطأ في المزامنة", "fa-triangle-exclamation");
+                    window.showCustomAlert("فشل الحفظ في السحابة. السبب التقني:\n" + (e.message || "تأكد من الاتصال بالإنترنت"), "خطأ في المزامنة", "fa-triangle-exclamation");
                 } finally {
                     btn.innerHTML = origText;
                     btn.disabled = false;
@@ -1875,7 +1891,7 @@
                                     if (cellVal !== undefined && cellVal !== null && cellVal.toString().trim() !== "") {
                                         let s = cellVal.toString();
                                         s = s.replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
-                                        s = s.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d));
+                                        s = s.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷٨٩'.indexOf(d));
                                         s = s.replace(/,/g, '');
                                         s = s.replace(/[^0-9.-]/g, '');
 
