@@ -283,7 +283,7 @@
                 </div>
                 
                 <div class="flex items-center justify-center gap-3 z-10">
-                    <div class="relative flex flex-col items-center bg-slate-50 px-3 py-0.5 rounded border border-slate-200 hover:border-[var(--gold-primary)] transition-colors cursor-pointer group/date shadow-sm hover:shadow" onclick="document.getElementById('date-start-input')._flatpickr.open()">
+                    <div class="relative flex flex-col items-center bg-slate-50 px-3 py-0.5 rounded border border-slate-200 hover:border-[var(--gold-primary)] transition-colors cursor-pointer group/date shadow-sm hover:shadow">
                         <input type="text" id="date-start-input" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20">
                         <div class="flex items-center gap-1 z-10 pointer-events-none">
                             <span id="ui-date-start" class="font-numbers text-[13px] font-black text-[var(--charcoal-800)] transition-colors" dir="ltr">-- --- ----</span>
@@ -294,7 +294,7 @@
                         <i class="fa-solid fa-arrow-left-long text-[12px]"></i>
                     </div>
                     
-                    <div class="relative flex flex-col items-center bg-[var(--gold-primary)]/10 px-3 py-0.5 rounded border border-[var(--gold-primary)]/30 hover:bg-[var(--gold-primary)]/20 transition-colors cursor-pointer group/date shadow-sm hover:shadow" onclick="document.getElementById('date-end-input')._flatpickr.open()">
+                    <div class="relative flex flex-col items-center bg-[var(--gold-primary)]/10 px-3 py-0.5 rounded border border-[var(--gold-primary)]/30 hover:bg-[var(--gold-primary)]/20 transition-colors cursor-pointer group/date shadow-sm hover:shadow">
                         <input type="text" id="date-end-input" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20">
                         <div class="flex items-center gap-1 z-10 pointer-events-none">
                             <span id="ui-date-end" class="font-numbers text-[13px] font-black text-[var(--gold-dark)] transition-colors" dir="ltr">-- --- ----</span>
@@ -502,7 +502,7 @@
                     <div class="no-print flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-2 py-1 shadow-sm">
                         <i class="fa-solid fa-filter text-[var(--gold-dark)] text-[11px]"></i>
                         <select id="timelineViewMode" onchange="window.updateDashboard()" class="text-[12px] font-bold text-slate-700 bg-transparent border-none outline-none cursor-pointer">
-                            <option value="monthly">عرض شهري (مفصل)</option>
+                            <option value="monthly">عرض شهري (م مفصل)</option>
                             <option value="quarterly">عرض ربع سنوي</option>
                             <option value="semi">عرض نصف سنوي</option>
                             <option value="yearly">عرض سنوي (إجمالي)</option>
@@ -521,7 +521,9 @@
         <!-- تذييل الصفحة -->
         <footer class="w-full px-10 flex justify-between items-center text-[13px] bg-white border-t border-slate-200 h-[60px] shrink-0 font-bold text-slate-500">
             <div class="w-1/4 text-right flex items-center gap-1">
-                <!-- تم إزالة الزر من هنا بناءً على طلبك -->
+                <button onclick="restore2026Data()" class="no-print flex items-center gap-1.5 bg-purple-50 text-purple-600 border border-purple-200 px-3 py-1.5 rounded-lg text-[11px] font-bold hover:bg-purple-600 hover:text-white transition-all shadow-sm" title="استخدم هذا الزر لرفع البيانات المدمجة للسحابة لإصلاح التلبك">
+                    <i class="fa-solid fa-life-ring"></i> استعادة بيانات 2026 للسحابة
+                </button>
             </div>
             <div class="w-2/4 flex justify-center items-center gap-3">
                 
@@ -544,7 +546,7 @@
                     <i class="fa-solid fa-file-excel text-[14px]"></i> استيراد Excel
                 </button>
 
-                <button onclick="requestManualSync()" class="no-print btn-sync flex items-center gap-2 px-5 py-2.5 rounded-lg text-[12px] font-bold transition-all relative overflow-hidden group">
+                <button id="mainSyncBtn" onclick="requestManualSync()" class="no-print btn-sync flex items-center gap-2 px-5 py-2.5 rounded-lg text-[12px] font-bold transition-all relative overflow-hidden group">
                     <i class="fa-solid fa-cloud-arrow-up text-[14px]"></i>
                     <span>حفظ ومزامنة في السحابة</span>
                     <div class="absolute inset-0 bg-white/20 transform -translate-x-full group-hover:translate-x-full transition-transform duration-500"></div>
@@ -672,25 +674,6 @@
             </div>
         </div>
 
-        <!-- نافذة تأكيد تغيير النطاق الزمني -->
-        <div id="confirmDateModal" class="modal-overlay no-print" style="z-index: 60;">
-            <div class="bg-white rounded-xl shadow-2xl border border-slate-200 w-[350px] overflow-hidden transform scale-100">
-                <div class="bg-[var(--charcoal-900)] text-white px-5 py-3 flex items-center gap-2">
-                    <i class="fa-solid fa-calendar-circle-exclamation text-[var(--gold-primary)]"></i>
-                    <h3 class="font-bold text-[14px]">تأكيد تغيير النطاق الزمني</h3>
-                </div>
-                <div class="p-5 flex flex-col gap-4">
-                    <p class="text-[13px] text-slate-600 font-bold text-center leading-relaxed">
-                        هل تريد بالفعل إظهار بيانات الفترة المحددة وتحديث السحابة؟
-                    </p>
-                    <div class="flex gap-2 mt-2">
-                        <button id="confirmDateBtn" onclick="confirmDateChange()" class="flex-1 bg-[var(--gold-primary)] text-white py-2 rounded-lg text-[13px] font-bold hover:bg-[var(--gold-dark)] transition-colors flex justify-center items-center gap-2">موافق</button>
-                        <button onclick="cancelDateChange()" class="flex-1 bg-slate-100 text-slate-600 py-2 rounded-lg text-[13px] font-bold hover:bg-slate-200 transition-colors">إلغاء</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <!-- الإشعارات المخصصة -->
         <div id="alertModal" class="modal-overlay no-print" style="z-index: 70;">
             <div class="bg-white rounded-xl shadow-2xl border border-slate-200 w-[350px] overflow-hidden transform scale-100">
@@ -735,11 +718,11 @@
     <!-- ========================================== -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // إعدادات فايربيس
-        const firebaseConfig = {
+        // إعدادات فايربيس متوافقة مع الأمان
+        const fallbackConfig = {
             apiKey: "AIzaSyA5nZZDcgoqEz20tsw4-ib4vaBhWe9XWj4",
             authDomain: "cash-flows-458ac.firebaseapp.com",
             projectId: "cash-flows-458ac",
@@ -747,6 +730,9 @@
             messagingSenderId: "361093626255",
             appId: "1:361093626255:web:6d98d0cb6c416741f973fa"
         };
+
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : fallbackConfig;
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
@@ -761,7 +747,6 @@
                 const passwordModal = document.getElementById('passwordModal');
                 const detailsModal = document.getElementById('detailsModal');
                 const openBalanceModal = document.getElementById('openBalanceModal');
-                const confirmDateModal = document.getElementById('confirmDateModal');
                 const confirmOpenBalModal = document.getElementById('confirmOpenBalModal');
                 const alertModal = document.getElementById('alertModal');
                 const confirmSyncModal = document.getElementById('confirmSyncModal');
@@ -770,7 +755,6 @@
                 else if (passwordModal.classList.contains('active')) window.closePasswordModal();
                 else if (openBalanceModal && openBalanceModal.classList.contains('active')) window.closeOpenBalanceModal();
                 else if (confirmOpenBalModal && confirmOpenBalModal.classList.contains('active')) window.cancelSaveOpeningBalance();
-                else if (confirmDateModal && confirmDateModal.classList.contains('active')) window.cancelDateChange();
                 else if (confirmSyncModal && confirmSyncModal.classList.contains('active')) confirmSyncModal.classList.remove('active');
                 else if (detailsModal.classList.contains('active')) window.closeDetails();
             }
@@ -791,36 +775,30 @@
         // قاموس الأشهر لترجمة النصوص إلى تواريخ للمقارنة والفلاتر
         const arMonthsMap = { 'يناير':0, 'فبراير':1, 'مارس':2, 'أبريل':3, 'مايو':4, 'يونيو':5, 'يوليو':6, 'أغسطس':7, 'سبتمبر':8, 'أكتوبر':9, 'نوفمبر':10, 'ديسمبر':11 };
 
-        // اختصارات إنجليزية ثابتة لكل شهر — تُستخدم لبناء مفتاح ثابت (key) عند استيراد شهر محذوف وإعادته
         const arMonthShortEn = { 'يناير':'jan', 'فبراير':'feb', 'مارس':'mar', 'أبريل':'apr', 'مايو':'may', 'يونيو':'jun', 'يوليو':'jul', 'أغسطس':'aug', 'سبتمبر':'sep', 'أكتوبر':'oct', 'نوفمبر':'nov', 'ديسمبر':'dec' };
 
-        // محلِّل ترويسة عمود إكسل: يستخرج اسم الشهر العربي والسنة من نص مثل "مايو 26" أو "مايو2026" أو "مايو 2026"
+        // محلِّل ترويسة عمود إكسل
         window.parseMonthHeader = function(headStr) {
             if (!headStr) return null;
             let s = headStr.toString().replace(/[\u200B-\u200D\uFEFF]/g, '').trim();
-            // تحويل الأرقام العربية إلى لاتينية
             s = s.replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d).toString());
             s = s.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d).toString());
 
-            // التقاط اسم الشهر العربي
             let foundName = null;
             for (const n of Object.keys(arMonthsMap)) {
                 if (s.includes(n)) { foundName = n; break; }
             }
             if (!foundName) return null;
 
-            // التقاط السنة (4 خانات أو 2 خانة)
             const yearMatch = s.match(/(20\d{2})|(\d{2})(?!\d)/);
             let year;
             if (yearMatch) {
                 if (yearMatch[1]) {
                     year = yearMatch[1];
                 } else {
-                    // سنة من رقمين → افتراض القرن 20xx
                     year = '20' + yearMatch[2];
                 }
             } else {
-                // لا توجد سنة في الترويسة → افتراض السنة من الأشهر الموجودة حالياً (أحدثها)
                 const current = window.appState && window.appState.months && window.appState.months.length
                     ? window.appState.months[0].year
                     : (new Date()).getFullYear().toString();
@@ -830,7 +808,6 @@
             return { name: foundName, year: year };
         };
 
-        // مولِّد مفتاح ثابت للشهر (مطابق لتنسيق القالب الأصلي: may26, jun26, ...)
         window.buildMonthKey = function(name, year) {
             const shortEn = arMonthShortEn[name];
             if (!shortEn) return 'm_' + Math.random().toString(36).substr(2, 5);
@@ -925,7 +902,7 @@
             ]
         };
 
-        // تعيين الحالة المبدئية عند فتح الملف لتكون مساوية للقالب (في حال لم توجد إنترنت)
+        // تعيين الحالة المبدئية
         window.appState = JSON.parse(JSON.stringify(window.pure2026Template));
 
         window.currentActiveCategory = null;
@@ -973,25 +950,35 @@
             return globalBal;
         }
 
+        // الحفظ السحابي
         window.saveToCloudSilently = async function(forcePush = false) {
             if (!window.isCloudReadComplete && !forcePush) {
                 console.warn("Blocked blind overwrite to Firebase.");
-                throw new Error("تم حظر الحفظ لتجنب مسح البيانات: لم يتم جلب البيانات الأساسية من السحابة مسبقاً (يرجى التأكد من أن قاعدة بيانات Firestore جاهزة ومفتوحة للقراءة والكتابة).");
+                throw new Error("لا يمكن الحفظ قبل اكتمال جلب البيانات من السحابة.");
             }
 
             try {
                 const cloudStatus = document.getElementById('cloud-status');
+                const mainSyncBtn = document.getElementById('mainSyncBtn');
+                
                 if(cloudStatus) { cloudStatus.classList.remove('hidden'); cloudStatus.innerHTML = '<i class="fa-solid fa-spinner fa-spin ml-1 text-blue-500"></i>جاري المزامنة...'; }
                 
-                await setDoc(doc(db, "reports", "executive_dashboard"), window.appState);
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'reports', 'executive_dashboard');
+                await setDoc(docRef, window.appState);
                 
                 if(cloudStatus) {
                     cloudStatus.innerHTML = '<i class="fa-solid fa-cloud-check ml-1 text-[var(--success)]"></i>تم الحفظ بنجاح';
                     setTimeout(() => cloudStatus.innerHTML = '<i class="fa-solid fa-cloud text-slate-300 ml-1"></i>جاهز ومحدث', 4000);
                 }
+                
+                // إيقاف نبض الزر بعد نجاح الحفظ
+                if(mainSyncBtn) {
+                    mainSyncBtn.classList.remove('animate-pulse', 'ring-4', 'ring-blue-300');
+                }
             } catch (e) {
                 console.error("Firebase save error:", e);
-                throw e; // لتمرير رسالة الخطأ للنافذة المنبثقة
+                window.showCustomAlert("حدث خطأ أثناء الاتصال بقاعدة البيانات. يرجى التأكد من اتصالك بالإنترنت.", "خطأ في الاتصال", "fa-triangle-exclamation");
+                throw e;
             }
         }
 
@@ -1008,11 +995,10 @@
             btn.disabled = true;
 
             try {
-                await window.saveToCloudSilently(true); // فرض الحفظ بناءً على رغبة المستخدم
+                await window.saveToCloudSilently();
                 document.getElementById('confirmSyncModal').classList.remove('active');
                 window.showCustomAlert("تم اعتماد البيانات وحفظها في قاعدة البيانات السحابية بنجاح.", "تم الاعتماد", "fa-circle-check");
             } catch(e) {
-                window.showCustomAlert("فشل الحفظ والمزامنة. السبب التقني:\n" + (e.message || "تأكد من الإنترنت."), "خطأ فني", "fa-triangle-exclamation");
             } finally {
                 btn.innerHTML = origText;
                 btn.disabled = false;
@@ -1024,7 +1010,9 @@
                 const cloudStatus = document.getElementById('cloud-status');
                 if(cloudStatus) cloudStatus.innerHTML = '<i class="fa-solid fa-spinner fa-spin ml-1"></i>جاري التحميل...';
 
-                const docSnap = await getDoc(doc(db, "reports", "executive_dashboard"));
+                // مسار صحيح مكون من 6 أجزاء لضمان صلاحيات القراءة
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'reports', 'executive_dashboard');
+                const docSnap = await getDoc(docRef);
                 if (docSnap.exists()) {
                     window.appState = docSnap.data();
                     window.isCloudReadComplete = true; 
@@ -1043,32 +1031,39 @@
                 window.updateDashboard();
             } catch (e) {
                 console.error("Firebase load error:", e);
-                const cloudStatus = document.getElementById('cloud-status');
-                if(cloudStatus) cloudStatus.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-red-500 ml-1"></i>خطأ في الاتصال';
-                
                 window.updateTitlesUI();
                 window.updateDashboard();
-                
-                // تنبيه فوري إذا كانت المشكلة من صلاحيات فايربيس
-                setTimeout(() => {
-                    window.showCustomAlert("فشل الاتصال بقاعدة البيانات السحابية. يرجى التأكد من صلاحيات (Firestore Rules) لتسمح بالقراءة والكتابة.\n\nالرسالة التقنية:\n" + e.message, "تنبيه قاعدة البيانات", "fa-database");
-                }, 1500);
             }
         };
 
         window.addEventListener('DOMContentLoaded', async () => {
-            try { await signInAnonymously(auth); } catch(e) { console.warn("Anon auth failed", e); }
+            const initAuth = async () => {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            };
+            
+            try { 
+                await initAuth(); 
+            } catch(e) { 
+                console.warn("Auth failed", e); 
+            }
 
             window.updateTitlesUI();
 
-            // إصلاح محوري: تفجير الـ Event وتوجيه التحديث المباشر للواجهة مع flatpickr
             window.fpStart = flatpickr("#date-start-input", {
                 dateFormat: "d M Y",
                 defaultDate: window.appState.dateStartStr,
                 disableMobile: true,
                 onChange: function(selectedDates, dateStr) {
-                    window.pendingStartDate = dateStr;
-                    document.getElementById('ui-date-start').innerText = dateStr; 
+                    if (dateStr === window.appState.dateStartStr) return;
+                    window.appState.dateStartStr = dateStr;
+                    document.getElementById('ui-date-start').innerText = dateStr;
+                    window.updateDashboard();
+                    document.getElementById('cloud-status').innerHTML = '<i class="fa-solid fa-triangle-exclamation text-orange-400 ml-1"></i>توجد تغييرات غير محفوظة';
+                    document.getElementById('mainSyncBtn').classList.add('animate-pulse', 'ring-4', 'ring-blue-300');
                     setTimeout(() => {
                         window.fpEnd.open();
                     }, 100);
@@ -1080,64 +1075,38 @@
                 defaultDate: window.appState.dateEndStr,
                 disableMobile: true,
                 onChange: function(selectedDates, dateStr) {
-                    window.pendingEndDate = dateStr;
-                    document.getElementById('ui-date-end').innerText = dateStr; 
-                    if (!window.pendingStartDate) window.pendingStartDate = window.appState.dateStartStr;
-                    if (window.pendingStartDate !== window.appState.dateStartStr || window.pendingEndDate !== window.appState.dateEndStr) {
-                        document.getElementById('confirmDateModal').classList.add('active');
-                    } else {
-                        window.pendingStartDate = null;
-                        window.pendingEndDate = null;
-                    }
+                    if (dateStr === window.appState.dateEndStr) return;
+                    window.appState.dateEndStr = dateStr;
+                    document.getElementById('ui-date-end').innerText = dateStr;
+                    window.updateDashboard();
+                    document.getElementById('cloud-status').innerHTML = '<i class="fa-solid fa-triangle-exclamation text-orange-400 ml-1"></i>توجد تغييرات غير محفوظة';
+                    document.getElementById('mainSyncBtn').classList.add('animate-pulse', 'ring-4', 'ring-blue-300');
                 }
             });
 
             await window.loadFromFirebase();
         });
 
-        window.confirmDateChange = async function() {
-            const btn = document.getElementById('confirmDateBtn');
-            const origText = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري الحفظ...';
-            btn.disabled = true;
-
-            const oldStart = window.appState.dateStartStr;
-            const oldEnd = window.appState.dateEndStr;
-
-            if (window.pendingStartDate) window.appState.dateStartStr = window.pendingStartDate;
-            if (window.pendingEndDate) window.appState.dateEndStr = window.pendingEndDate;
-
-            try {
-                await window.saveToCloudSilently(true); // فرض المزامنة للتأريخ
-                document.getElementById('ui-date-start').innerText = window.appState.dateStartStr;
-                document.getElementById('ui-date-end').innerText = window.appState.dateEndStr;
-                window.updateDashboard();
-                document.getElementById('confirmDateModal').classList.remove('active');
-                window.showCustomAlert("تم تغيير النطاق الزمني وحفظه كإعداد افتراضي في السحابة.", "تحديث النطاق الزمني", "fa-calendar-check");
-            } catch(e) {
-                window.appState.dateStartStr = oldStart;
-                window.appState.dateEndStr = oldEnd;
-                window.fpStart.setDate(oldStart, false);
-                window.fpEnd.setDate(oldEnd, false);
-                document.getElementById('ui-date-start').innerText = oldStart;
-                document.getElementById('ui-date-end').innerText = oldEnd;
-                window.showCustomAlert("تعذر حفظ النطاق الزمني في السحابة. السبب التقني:\n" + (e.message || "خطأ مجهول"), "خطأ في المزامنة", "fa-triangle-exclamation");
-            } finally {
-                btn.innerHTML = origText;
-                btn.disabled = false;
-                window.pendingStartDate = null;
-                window.pendingEndDate = null;
-            }
-        };
-
-        window.cancelDateChange = function() {
-            document.getElementById('confirmDateModal').classList.remove('active');
-            window.fpStart.setDate(window.appState.dateStartStr, false);
-            window.fpEnd.setDate(window.appState.dateEndStr, false);
-            document.getElementById('ui-date-start').innerText = window.appState.dateStartStr;
-            document.getElementById('ui-date-end').innerText = window.appState.dateEndStr;
-            window.pendingStartDate = null;
-            window.pendingEndDate = null;
+        window.restore2026Data = function() {
+            window.requestAuth(async () => {
+                try {
+                    window.appState = JSON.parse(JSON.stringify(window.pure2026Template));
+                    
+                    window.fpStart.setDate(window.appState.dateStartStr, false);
+                    window.fpEnd.setDate(window.appState.dateEndStr, false);
+                    document.getElementById('ui-date-start').innerText = window.appState.dateStartStr;
+                    document.getElementById('ui-date-end').innerText = window.appState.dateEndStr;
+                    
+                    window.updateDashboard();
+                    
+                    await window.saveToCloudSilently(true);
+                    window.isCloudReadComplete = true; 
+                    
+                    window.showCustomAlert("تم استعادة بيانات 2026 الأصلية وتصحيح قاعدة البيانات السحابية بنجاح. النظام الآن يعمل بشكل سليم.", "تمت الاستعادة", "fa-check-double");
+                } catch(e) {
+                    window.showCustomAlert("فشل رفع النسخة للسحابة. تأكد من الإنترنت.", "خطأ فني", "fa-triangle-exclamation");
+                }
+            });
         };
 
         window.formatCurr = function(num) {
@@ -1148,7 +1117,7 @@
             if(typeof val === 'number') return val;
             let str = val.toString().trim();
             str = str.replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
-            str = str.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷٨٩'.indexOf(d));
+            str = str.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d));
             let isNegative = str.startsWith('-') || (str.startsWith('(') && str.endsWith(')'));
             let cleanStr = str.replace(/[^0-9.]/g, '');
             let parts = cleanStr.split('.');
@@ -1353,7 +1322,7 @@
                 `;
             });
             
-            html += `<div class="text-[13px] font-black text-[var(--gold-dark)] bg-[var(--gold-primary)]/10 py-1 px-1 rounded whitespace-nowrap text-center overflow-visible">الإجمالي المعروض</div>`;
+            html += `<div class="text-[13px] font-black text-[var(--gold-dark)] bg-[var(--gold-primary)]/10 py-1 rounded min-w-0 truncate">الإجمالي المعروض</div>`;
             if (window.isEditMode) html += `<div class="min-w-0 shrink-0"></div>`; 
 
             header.innerHTML = html;
@@ -1660,13 +1629,13 @@
                 window.appState.openBalance = Number(window.pendingOpenBalanceValue);
                 
                 try {
-                    await window.saveToCloudSilently(true); // فرض المزامنة للرصيد
+                    await window.saveToCloudSilently();
                     window.updateDashboard(); 
                     document.getElementById('confirmOpenBalModal').classList.remove('active');
                     window.showCustomAlert("تم تعديل قيمة الرصيد الافتتاحي وحفظه في السحابة بنجاح.", "تحديث الرصيد", "fa-check-circle");
                 } catch (e) {
                     window.appState.openBalance = oldBalance;
-                    window.showCustomAlert("فشل الحفظ في السحابة. السبب التقني:\n" + (e.message || "تأكد من الاتصال بالإنترنت"), "خطأ في المزامنة", "fa-triangle-exclamation");
+                    window.showCustomAlert("فشل الحفظ في السحابة. يرجى التأكد من اتصالك بالإنترنت والمحاولة مجدداً.", "خطأ في المزامنة", "fa-triangle-exclamation");
                 } finally {
                     btn.innerHTML = origText;
                     btn.disabled = false;
@@ -1719,7 +1688,6 @@
                     const wb = XLSX.utils.book_new();
                     XLSX.utils.book_append_sheet(wb, ws, "التدفقات النقدية");
 
-                    // الحل الجذري لتخطي حظر التحميل الصامت للمتصفحات (Blob Method)
                     const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
                     const blob = new Blob([wbout], { type: "application/octet-stream" });
                     const url = window.URL.createObjectURL(blob);
@@ -1756,33 +1724,25 @@
                 reader.onload = function(e) {
                     try {
                         const data = new Uint8Array(e.target.result);
-                        // استخدام raw: false يجبر مكتبة القراءة على سحب الأرقام والنصوص كما تراها عينك في الإكسل تماماً لتفادي تحويلات التواريخ
-                        const workbook = XLSX.read(data, {type: 'array', cellDates: false});
+                        // السماح باستخراج التواريخ في حال قام الإكسل بتحويل العناوين تلقائياً إلى تواريخ
+                        const workbook = XLSX.read(data, {type: 'array', cellDates: true});
                         const firstSheetName = workbook.SheetNames[0];
                         const worksheet = workbook.Sheets[firstSheetName];
                         
                         // استخراج البيانات كصفوف وأعمدة صريحة
-                        const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false, defval: "" });
+                        const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" });
 
-                        if (rows.length < 2) {
+                        if (!rows || rows.length < 2) {
                             window.showCustomAlert("الملف المرفوع فارغ أو لا يحتوي على بنية البيانات المتوقعة.", "تنبيه", "fa-xmark");
                             return;
                         }
 
                         const headers = rows[0];
                         let cellsUpdated = 0;
+                        let addedItemsCount = 0;
                         const categories = ['opRec', 'opPay', 'invRec', 'invPay', 'finRec', 'finPay'];
 
-                        // ===============================================================
-                        // (الإصلاح الجذري) — المزامنة الكاملة: الملف هو المصدر الوحيد للحقيقة
-                        // مع دعم استعادة الأشهر التي حُذفت سابقاً (Resurrection)
-                        // ===============================================================
-
-                        // 1) تحليل ترويسات الأعمدة لاستخراج (الاسم، السنة) لكل شهر في الملف
-                        //    إذا لم يكن الشهر موجوداً في appState.months حالياً، يتم إعادة إنشائه (resurrect)
-                        //    بمفتاح ثابت مطابق لتنسيق القالب — هذا يضمن أن إعادة استيراد الملف الأصلي
-                        //    تُرجع كل البيانات حتى لو سبق وتم استيراد ملف فيه أشهر محذوفة
-                        const importedMonths = []; // ترتيب الأعمدة كما في الملف
+                        const importedMonths = [];
                         const colIndexToMonthKey = {};
                         const importedMonthKeysSet = new Set();
                         let resurrectedCount = 0;
@@ -1791,16 +1751,13 @@
                             let headStr = headers[c] ? headers[c].toString() : "";
                             if (!headStr.trim()) continue;
 
-                            // تحليل الترويسة ذكياً لاستخراج اسم الشهر والسنة
                             const parsed = window.parseMonthHeader(headStr);
                             if (!parsed) continue;
 
-                            // البحث عن الشهر في القائمة الحالية بمطابقة (الاسم + السنة)
                             let monthEntry = window.appState.months.find(m =>
                                 m.name === parsed.name && m.year === parsed.year
                             );
 
-                            // لو لم يوجد → استعادته بإعادة إنشائه (resurrect) بمفتاح ثابت
                             if (!monthEntry) {
                                 const newKey = window.buildMonthKey(parsed.name, parsed.year);
                                 monthEntry = {
@@ -1809,9 +1766,7 @@
                                     year: parsed.year,
                                     label: `${parsed.name} ${parsed.year.slice(-2)}`
                                 };
-                                // إضافته إلى قائمة أشهر النظام (سيُعاد ترتيبها لاحقاً عبر getVisibleMonths)
                                 window.appState.months.push(monthEntry);
-                                // تهيئة قيم البند لهذا الشهر الجديد بصفر لجميع البنود
                                 ['opRec', 'opPay', 'invRec', 'invPay', 'finRec', 'finPay'].forEach(cat => {
                                     window.appState[cat].forEach(item => {
                                         if (item[newKey] === undefined) item[newKey] = 0;
@@ -1827,15 +1782,12 @@
                             }
                         }
 
-                        // 2) حماية: إن لم يتم التعرّف على أي شهر، أوقف العملية لتجنّب مسح البيانات
                         if (importedMonths.length === 0) {
                             window.showCustomAlert("لم يتم التعرّف على أي عمود شهر صالح في الملف المُستورد. تم إلغاء العملية للحفاظ على بياناتك الحالية.", "تنبيه", "fa-triangle-exclamation");
                             document.getElementById('excelInput').value = '';
                             return;
                         }
 
-                        // 3) تصفير كل قيم كل البنود لكل الأشهر المستوردة (Full Sync)
-                        //    هذا يضمن أن أي خلية فارغة في الإكسل تُسجَّل = 0 (وليس الإبقاء على القيمة القديمة)
                         const importedMonthKeys = importedMonths.map(m => m.key);
                         categories.forEach(cat => {
                             window.appState[cat].forEach(item => {
@@ -1843,21 +1795,73 @@
                             });
                         });
 
-                        // 4) معالجة الصفوف وحقن الأرقام (الخلايا الفارغة تبقى صفراً من التصفير أعلاه)
+                        // دالة لتوحيد النصوص العربية لتجاهل المسافات، التشكيل، والهمزات أثناء المطابقة
+                        const normalizeArabic = (text) => {
+                            if (!text) return '';
+                            return text.toString()
+                                .replace(/[\u200B-\u200D\uFEFF]/g, '')
+                                .replace(/\s+/g, '') // إزالة كل المسافات
+                                .replace(/[أإآا]/g, 'ا')
+                                .replace(/[يى]/g, 'ي')
+                                .replace(/[ةه]/g, 'ه')
+                                .trim();
+                        };
+
+                        const catMapping = {
+                            'مقبوضاتتشغيليه': 'opRec',
+                            'مدفوعاتتشغيليه': 'opPay',
+                            'مقبوضاتاستثماريه': 'invRec',
+                            'مدفوعاتاستثماريه': 'invPay',
+                            'مقبوضاتتمويليه': 'finRec',
+                            'مدفوعاتتمويليه': 'finPay'
+                        };
+
+                        // دالة صارمة جداً لقراءة أي رقم مهما كان تنسيقه من الإكسل
+                        const parseExcelNum = (val) => {
+                            if (val === undefined || val === null || val === '') return 0;
+                            if (typeof val === 'number') return val; // سحب الرقم الخام مباشرة إن توفر
+                            
+                            let str = val.toString().trim();
+                            // معالجة الأرقام المحاسبية السالبة المحاطة بأقواس مثل (1,500)
+                            let isNegative = str.startsWith('-') || (str.startsWith('(') && str.endsWith(')'));
+                            str = str.replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
+                            str = str.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d));
+                            str = str.replace(/,/g, ''); // إزالة فواصل الآلاف
+                            str = str.replace(/[^0-9.-]/g, ''); // إبقاء الأرقام والفاصلة العشرية فقط
+                            
+                            if (str === '' || str === '-' || str === '.') return 0;
+
+                            let parsed = parseFloat(str) || 0;
+                            return isNegative ? -Math.abs(parsed) : parsed;
+                        };
+
                         for (let r = 1; r < rows.length; r++) {
                             const row = rows[r];
                             let rawName = row[0];
                             if (!rawName) continue;
 
-                            let cleanName = rawName.toString().replace(/[\u200B-\u200D\uFEFF]/g, '').replace(/\s+/g, ' ').trim();
+                            const normExcelName = normalizeArabic(rawName);
 
                             let matchedItem = null;
                             let matchedCat = null;
 
                             categories.forEach(cat => {
-                                let found = window.appState[cat].find(i => i.name.replace(/\s+/g, ' ').trim() === cleanName);
+                                let found = window.appState[cat].find(i => normalizeArabic(i.name) === normExcelName);
                                 if (found) { matchedItem = found; matchedCat = cat; }
                             });
+
+                            // إذا لم يتم العثور على البند وكان له تصنيف في الإكسل، نقوم بإضافته للنظام كبند جديد!
+                            if (!matchedItem && row[1]) {
+                                const excelCat = normalizeArabic(row[1]);
+                                matchedCat = catMapping[excelCat];
+                                if (matchedCat) {
+                                    let cleanName = rawName.toString().replace(/[\u200B-\u200D\uFEFF]/g, '').replace(/\s+/g, ' ').trim();
+                                    matchedItem = { id: 'new_' + Math.random().toString(36).substr(2, 9), name: cleanName };
+                                    window.appState.months.forEach(m => matchedItem[m.key] = 0); // تهيئة بأصفار لكل الأشهر التاريخية
+                                    window.appState[matchedCat].push(matchedItem);
+                                    addedItemsCount++;
+                                }
+                            }
 
                             if (matchedItem) {
                                 for (let c in colIndexToMonthKey) {
@@ -1865,13 +1869,7 @@
                                     let cellVal = row[c];
 
                                     if (cellVal !== undefined && cellVal !== null && cellVal.toString().trim() !== "") {
-                                        let s = cellVal.toString();
-                                        s = s.replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
-                                        s = s.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷٨٩'.indexOf(d));
-                                        s = s.replace(/,/g, '');
-                                        s = s.replace(/[^0-9.-]/g, '');
-
-                                        let parsedNum = parseFloat(s) || 0;
+                                        let parsedNum = parseExcelNum(cellVal);
 
                                         if (['opPay', 'invPay', 'finPay'].includes(matchedCat)) {
                                             parsedNum = Math.abs(parsedNum);
@@ -1880,23 +1878,16 @@
                                         matchedItem[mKey] = parsedNum;
                                         cellsUpdated++;
                                     }
-                                    // الخلية الفارغة = 0 (محفوظة من خطوة التصفير)
                                 }
                             }
                         }
 
-                        // 5) (الإصلاح المحوري) — مزامنة قائمة الأشهر في النظام مع الملف
-                        //    حذف الأشهر التي ليست في الملف، والاحتفاظ بترتيب أعمدة الإكسل
-                        //    + إعادة ترتيب الأشهر زمنياً لضمان عرض صحيح
                         const removedMonthKeys = window.appState.months
                             .filter(m => !importedMonthKeysSet.has(m.key))
                             .map(m => m.key);
 
                         if (removedMonthKeys.length > 0) {
-                            // أبقِ فقط الأشهر التي وردت في الملف
                             window.appState.months = importedMonths.slice();
-
-                            // تنظيف مفاتيح الأشهر المحذوفة من جميع البنود (نظافة بيانات)
                             categories.forEach(cat => {
                                 window.appState[cat].forEach(item => {
                                     removedMonthKeys.forEach(k => { delete item[k]; });
@@ -1904,16 +1895,12 @@
                             });
                         }
 
-                        // إعادة ترتيب الأشهر زمنياً (مهم بعد استعادة الأشهر المحذوفة)
                         window.appState.months.sort((a, b) => {
                             const ta = new Date(parseInt(a.year), arMonthsMap[a.name], 1).getTime();
                             const tb = new Date(parseInt(b.year), arMonthsMap[b.name], 1).getTime();
                             return ta - tb;
                         });
 
-                        // 5.1) توسيع نطاق التاريخ تلقائياً ليشمل كل الأشهر المستوردة
-                        //      (حتى لو كان النطاق الحالي أضيق من نطاق الملف، يتم توسيعه)
-                        //      هذا يضمن ظهور الأشهر المستعادة فوراً على الواجهة
                         if (importedMonths.length > 0) {
                             const sortedImported = importedMonths.slice().sort((a, b) => {
                                 const ta = new Date(parseInt(a.year), arMonthsMap[a.name], 1).getTime();
@@ -1925,7 +1912,7 @@
 
                             const enMonthsShort = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
                             const newStartDate = new Date(parseInt(firstM.year), arMonthsMap[firstM.name], 1);
-                            const newEndDate = new Date(parseInt(lastM.year), arMonthsMap[lastM.name] + 1, 0); // آخر يوم من الشهر
+                            const newEndDate = new Date(parseInt(lastM.year), arMonthsMap[lastM.name] + 1, 0);
 
                             const fmt = (d) => {
                                 const dd = String(d.getDate()).padStart(2, '0');
@@ -1937,14 +1924,9 @@
                             const curStart = new Date(window.appState.dateStartStr);
                             const curEnd = new Date(window.appState.dateEndStr);
 
-                            if (newStartDate < curStart) {
-                                window.appState.dateStartStr = fmt(newStartDate);
-                            }
-                            if (newEndDate > curEnd) {
-                                window.appState.dateEndStr = fmt(newEndDate);
-                            }
+                            if (newStartDate < curStart) window.appState.dateStartStr = fmt(newStartDate);
+                            if (newEndDate > curEnd) window.appState.dateEndStr = fmt(newEndDate);
 
-                            // تحديث عناصر الواجهة الخاصة بالتاريخ (نص + flatpickr إن وُجد)
                             const uiStart = document.getElementById('ui-date-start');
                             const uiEnd = document.getElementById('ui-date-end');
                             if (uiStart) uiStart.innerText = window.appState.dateStartStr;
@@ -1953,32 +1935,28 @@
                             if (window.fpEnd && typeof window.fpEnd.setDate === 'function') window.fpEnd.setDate(window.appState.dateEndStr, false);
                         }
 
-                        // 6) إعادة بناء الواجهة بالكامل لعكس التغييرات فوراً (KPIs + الجدول التفصيلي + الترويسة)
-                        //    ملاحظة: renderDetailsList تعتمد على currentActiveCategory ولن تعمل بأمان
-                        //    إلا حين يكون المودال مفتوحاً وقد تم اختيار تصنيف. لذا نُحدّث المودال فقط حين يكون مرئياً.
                         const visibleMonths = window.getVisibleMonths();
-                        const detailsModalEl = document.getElementById('detailsModal');
-                        const isDetailsOpen = detailsModalEl && detailsModalEl.classList.contains('active') && !!window.currentActiveCategory;
-
-                        if (isDetailsOpen) {
-                            try {
-                                window.renderGridHeader(visibleMonths);
-                                window.renderDetailsList(visibleMonths);
-                            } catch (uiErr) {
-                                console.warn("UI refresh (details modal) skipped:", uiErr);
-                            }
+                        // إجبار واجهة اللوحة الرئيسية على التحديث بالأرقام الجديدة
+                        window.updateDashboard(); 
+                        
+                        // في حال كانت نافذة التفاصيل مفتوحة، نقوم بإعادة رسمها فوراً لتعكس الأرقام المستوردة
+                        if (document.getElementById('detailsModal').classList.contains('active')) {
+                            const visibleMonths = window.getVisibleMonths();
+                            window.renderGridHeader(visibleMonths);
+                            window.renderDetailsList(visibleMonths);
                         }
-
                         window.updateDashboard();
-
                         document.getElementById('excelInput').value = ''; // تصفير زر الرفع
 
                         let extraMsg = "";
                         if (removedMonthKeys.length > 0) extraMsg += `\nتمت إزالة (${removedMonthKeys.length}) شهر غير موجود في الملف.`;
-                        if (resurrectedCount > 0) extraMsg += `\nتمت استعادة (${resurrectedCount}) شهر إلى النظام من الملف.`;
+                        if (resurrectedCount > 0) extraMsg += `\nتمت إضافة/استعادة (${resurrectedCount}) شهر من الملف.`;
+                        if (addedItemsCount > 0) extraMsg += `\nتم اكتشاف وإضافة (${addedItemsCount}) بند جديد تلقائياً.`;
 
-                        window.showCustomAlert(`تم الاستيراد بنجاح مطلق.\nتم قراءة وتطبيق (${cellsUpdated}) خلية رقمية من الملف المرفق.${extraMsg}\n\nالأرقام الآن معروضة أمامك، اضغط على زر الحفظ والمزامنة لاعتمادها في السحابة.`, "نجاح العملية", "fa-check-circle");
-                        document.getElementById('cloud-status').innerHTML = '<i class="fa-solid fa-triangle-exclamation text-orange-400 ml-1"></i>بانتظار المزامنة';
+                        window.showCustomAlert(`تم الاستيراد بنجاح مطلق.\nتم تطبيق (${cellsUpdated}) قيمة مستوردة.${extraMsg}\n\nالأرقام الآن معروضة أمامك، لا تنسَ الضغط على زر المزامنة لاعتمادها في السحابة.`, "نجاح العملية", "fa-check-circle");
+                        document.getElementById('cloud-status').innerHTML = '<i class="fa-solid fa-triangle-exclamation text-orange-400 ml-1"></i>توجد تغييرات مستوردة بانتظار الحفظ';
+                        // جعل زر المزامنة ينبض ليلفت الانتباه
+                        document.getElementById('mainSyncBtn').classList.add('animate-pulse', 'ring-4', 'ring-blue-300');
 
                     } catch(error) {
                         console.error("Fatal Import Error:", error);
