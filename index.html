@@ -163,7 +163,7 @@
             transform: translateY(0) scale(1);
         }
 
-        .custom-scroll::-webkit-scrollbar { height: 6px; width: 6px; }
+        .custom-scroll::-webkit-scrollbar { height: 8px; width: 8px; }
         .custom-scroll::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         .custom-scroll::-webkit-scrollbar-thumb:hover { background: var(--gold-primary); }
@@ -509,10 +509,13 @@
                         </select>
                     </div>
                 </div>
-                <div class="flex-1 bg-white rounded-xl border border-slate-200 shadow-sm relative z-0 flex flex-col justify-center overflow-x-auto custom-scroll">
-                    <!-- التعديل الجمالي: تم استبدال w-full بـ min-w-full w-max لحل مشكلة قص العناصر في اتجاه الـ RTL -->
-                    <div id="timeline-container" class="relative flex items-start px-8 py-4 snap-x snap-mandatory min-w-full w-max" style="scroll-behavior: smooth;">
-                        <div class="w-full text-center py-10 text-slate-400 font-bold"><i class="fa-solid fa-spinner fa-spin text-xl"></i> جاري إعداد وتحديث مسار التدفقات...</div>
+                
+                <!-- تعديل هيكل الحاوية لحل مشكلة قص العنصر الأخير في التمرير (Scroll Cutoff Fix) -->
+                <div class="flex-1 bg-white rounded-xl border border-slate-200 shadow-sm relative z-0 flex flex-col overflow-hidden">
+                    <div class="w-full h-full overflow-x-auto custom-scroll pt-5 pb-3">
+                        <div id="timeline-container" class="relative flex flex-nowrap items-start w-max min-w-full">
+                            <div class="w-full text-center py-10 text-slate-400 font-bold"><i class="fa-solid fa-spinner fa-spin text-xl"></i> جاري إعداد وتحديث مسار التدفقات...</div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -795,22 +798,19 @@
         // اختصارات إنجليزية ثابتة لكل شهر — تُستخدم لبناء مفتاح ثابت (key)
         const arMonthShortEn = { 'يناير':'jan', 'فبراير':'feb', 'مارس':'mar', 'أبريل':'apr', 'مايو':'may', 'يونيو':'jun', 'يوليو':'jul', 'أغسطس':'aug', 'سبتمبر':'sep', 'أكتوبر':'oct', 'نوفمبر':'nov', 'ديسمبر':'dec' };
 
-        // محلِّل ترويسة عمود إكسل: يستخرج اسم الشهر العربي والسنة من نص مثل "مايو 26"
+        // محلِّل ترويسة عمود إكسل
         window.parseMonthHeader = function(headStr) {
             if (!headStr) return null;
             let s = headStr.toString().replace(/[\u200B-\u200D\uFEFF]/g, '').trim();
-            // تحويل الأرقام العربية إلى لاتينية
             s = s.replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d).toString());
             s = s.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷٨٩'.indexOf(d).toString());
 
-            // التقاط اسم الشهر العربي
             let foundName = null;
             for (const n of Object.keys(arMonthsMap)) {
                 if (s.includes(n)) { foundName = n; break; }
             }
             if (!foundName) return null;
 
-            // التقاط السنة (4 خانات أو 2 خانة)
             const yearMatch = s.match(/(20\d{2})|(\d{2})(?!\d)/);
             let year;
             if (yearMatch) {
@@ -924,7 +924,7 @@
             ]
         };
 
-        // تعيين الحالة المبدئية عند فتح الملف لتكون مساوية للقالب (في حال لم توجد إنترنت)
+        // تعيين الحالة المبدئية عند فتح الملف لتكون مساوية للقالب
         window.appState = JSON.parse(JSON.stringify(window.pure2026Template));
 
         window.currentActiveCategory = null;
@@ -1213,6 +1213,9 @@
             window.renderTimeline(visibleMonths, periodOpenBal);
         }
 
+        // ========================================================
+        // الحل الجذري والنهائي لمشكلة قص الشريط الزمني (Timeline)
+        // ========================================================
         window.renderTimeline = function(visibleMonths, startBalance) {
             const tlContainer = document.getElementById('timeline-container');
             tlContainer.innerHTML = '';
@@ -1260,11 +1263,11 @@
 
             let htmlStr = '';
 
-            // خط الربط المنقط (تم تعديل المسافات ليطابق الحواف بدقة)
-            htmlStr += `<div class="absolute top-[31px] left-[30px] right-[30px] border-t-[3px] border-dashed border-slate-300 -z-10"></div>`;
+            // تم تعديل إحداثيات خط الربط ليناسب الهيكل الجديد
+            htmlStr += `<div class="absolute top-[31px] left-[50px] right-[50px] border-t-[3px] border-dashed border-slate-300 -z-10"></div>`;
 
-            // فاصل ابتدائي لمنح أول عنصر مساحة مريحة 
-            htmlStr += `<div class="shrink-0 w-[4px]"></div>`;
+            // فاصل مساحي ابتدائي (لإعطاء مساحة للتنفس في بداية الشريط من اليمين)
+            htmlStr += `<div class="shrink-0" style="width: 20px; min-width: 20px; height: 1px;"></div>`;
 
             let currentBalance = startBalance;
 
@@ -1284,13 +1287,14 @@
                 currentBalance += netCash;
                 const netColor = netCash < 0 ? 'text-[var(--danger)]' : 'text-[var(--charcoal-900)]';
 
+                // الحاوية الفرعية الثابتة العرض تضمن عدم تشوه البطاقة أو قصها
                 htmlStr += `
-                    <div class="flex flex-col items-center relative group min-w-[170px] flex-1 shrink-0 px-2 snap-center">
+                    <div class="flex flex-col items-center relative group w-[180px] shrink-0 snap-center">
                         <div class="w-[64px] h-[64px] ${isLast ? 'bg-[var(--gold-primary)] border-[3px] border-white outline outline-2 outline-[var(--gold-primary)]' : 'bg-white rounded-full border-[3px] border-slate-200 hover:border-[var(--gold-primary)]'} shadow-sm flex flex-col items-center justify-center mb-3 transition-all duration-300 z-10 ${isLast ? 'rounded-full' : ''} group-hover:scale-105">
                             <span class="text-[11px] font-black ${isLast ? 'text-white' : 'text-slate-800'} leading-tight text-center px-1">${g.label}</span>
                             <span class="text-[9px] font-bold ${isLast ? 'text-[#FEF08A]' : 'text-slate-400'} font-numbers mt-0.5">${g.sub}</span>
                         </div>
-                        <div class="bg-white border ${isLast ? 'border-[var(--gold-primary)] shadow-md' : 'border-slate-100 shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)]'} rounded-xl p-2.5 w-[150px] transition-all duration-300 relative group-hover:-translate-y-1 group-hover:shadow-lg">
+                        <div class="bg-white border ${isLast ? 'border-[var(--gold-primary)] shadow-md' : 'border-slate-100 shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)]'} rounded-xl p-2.5 w-[155px] mx-auto transition-all duration-300 relative group-hover:-translate-y-1 group-hover:shadow-lg">
                             <div class="absolute top-0 left-0 right-0 ${isLast ? 'h-1.5 bg-[var(--gold-primary)]' : 'h-1 bg-slate-200 group-hover:bg-[var(--gold-primary)] transition-colors'} rounded-t-xl"></div>
                             <div class="flex flex-col gap-1.5 mt-1">
                                 <div class="flex flex-col items-center bg-slate-50 py-1.5 px-1 rounded-lg border border-slate-100">
@@ -1307,8 +1311,9 @@
                 `;
             });
 
-            // فاصل نهائي (السر في منع قص العنصر الأخير عند التمرير للحد الأقصى)
-            htmlStr += `<div class="shrink-0 w-[24px]"></div>`;
+            // فاصل مساحي نهائي قوي (Spacer): هذا هو الحل الجذري لمنع قص الشهر الأخير في الـ RTL
+            // يجبر المتصفح على إضافة 50 بيكسل إضافية في نهاية التمرير لضمان ظهور ظل وحدود العنصر الأخير كاملاً
+            htmlStr += `<div class="shrink-0 block" style="width: 50px; min-width: 50px; height: 1px; visibility: hidden; flex-shrink: 0;"></div>`;
 
             tlContainer.innerHTML = htmlStr;
         }
@@ -1753,8 +1758,6 @@
 
         // ===============================================
         // منطق قراءة بيانات الإكسل واستخلاصها الذكي (الحل الجذري الشامل)
-        // يعتمد على الإكسل كمصدر وحيد للحقيقة (Single Source of Truth)
-        // يطبق الحذف والتعديل والإضافة حسب ملف الإكسل
         // ===============================================
         window.handleExcelImport = function(event) {
             const file = event.target.files[0];
@@ -1780,9 +1783,9 @@
                         let cellsUpdated = 0;
                         let rowsImported = 0;
 
-                        // 1) بناء قائمة الأشهر من ترويسة الإكسل (الأعمدة من 2 فصاعداً)
                         const importedMonths = [];
                         const colIndexToMonthKey = {};
+                        const importedMonthKeysSet = new Set();
 
                         for (let c = 2; c < headers.length; c++) {
                             let headStr = headers[c] ? headers[c].toString() : "";
@@ -1791,20 +1794,29 @@
                             const parsed = window.parseMonthHeader(headStr);
                             if (!parsed) continue;
 
-                            // البحث عن الشهر الحالي لعدم تكرار المفاتيح
                             let monthEntry = window.appState.months.find(m => m.name === parsed.name && m.year === parsed.year);
                             
                             if (!monthEntry) {
+                                const newKey = window.buildMonthKey(parsed.name, parsed.year);
                                 monthEntry = {
-                                    key: window.buildMonthKey(parsed.name, parsed.year),
+                                    key: newKey,
                                     name: parsed.name,
                                     year: parsed.year,
                                     label: `${parsed.name} ${parsed.year.slice(-2)}`
                                 };
+                                window.appState.months.push(monthEntry);
+                                ['opRec', 'opPay', 'invRec', 'invPay', 'finRec', 'finPay'].forEach(cat => {
+                                    window.appState[cat].forEach(item => {
+                                        if (item[newKey] === undefined) item[newKey] = 0;
+                                    });
+                                });
                             }
                             
                             colIndexToMonthKey[c] = monthEntry.key;
-                            importedMonths.push(monthEntry);
+                            if (!importedMonthKeysSet.has(monthEntry.key)) {
+                                importedMonths.push(monthEntry);
+                                importedMonthKeysSet.add(monthEntry.key);
+                            }
                         }
 
                         if (importedMonths.length === 0) {
@@ -1813,12 +1825,6 @@
                             return;
                         }
 
-                        // تحديث أشهر النظام لتطابق الإكسل تماماً (مع الترتيب الزمني)
-                        window.appState.months = importedMonths.slice().sort((a, b) => {
-                            return new Date(parseInt(a.year), arMonthsMap[a.name], 1).getTime() - new Date(parseInt(b.year), arMonthsMap[b.name], 1).getTime();
-                        });
-
-                        // 2) إنشاء حاويات جديدة تماماً للبيانات
                         const newDataContainers = {
                             'opRec': [], 'opPay': [], 'invRec': [], 'invPay': [], 'finRec': [], 'finPay': []
                         };
@@ -1832,7 +1838,6 @@
                             'مدفوعات تمويلية': 'finPay'
                         };
 
-                        // 3) قراءة السطور من الإكسل
                         for (let r = 1; r < rows.length; r++) {
                             const row = rows[r];
                             let rawName = row[0];
@@ -1880,12 +1885,26 @@
                             rowsImported++;
                         }
 
-                        // 4) استبدال البيانات القديمة لتطبيق التعديلات والحذف
+                        // تصفية الأشهر المحذوفة
+                        const removedMonthKeys = window.appState.months
+                            .filter(m => !importedMonthKeysSet.has(m.key))
+                            .map(m => m.key);
+
+                        if (removedMonthKeys.length > 0) {
+                            window.appState.months = importedMonths.slice();
+                        }
+
+                        // الترتيب الزمني للأشهر
+                        window.appState.months.sort((a, b) => {
+                            const ta = new Date(parseInt(a.year), arMonthsMap[a.name], 1).getTime();
+                            const tb = new Date(parseInt(b.year), arMonthsMap[b.name], 1).getTime();
+                            return ta - tb;
+                        });
+
                         Object.keys(newDataContainers).forEach(cat => {
                             window.appState[cat] = newDataContainers[cat];
                         });
 
-                        // 5) تحديث النطاق الزمني
                         if (window.appState.months.length > 0) {
                             const firstM = window.appState.months[0];
                             const lastM = window.appState.months[window.appState.months.length - 1];
@@ -1896,8 +1915,11 @@
 
                             const fmt = (d) => `${String(d.getDate()).padStart(2, '0')} ${enMonthsShort[d.getMonth()]} ${d.getFullYear()}`;
 
-                            window.appState.dateStartStr = fmt(newStartDate);
-                            window.appState.dateEndStr = fmt(newEndDate);
+                            const curStart = new Date(window.appState.dateStartStr);
+                            const curEnd = new Date(window.appState.dateEndStr);
+
+                            if (newStartDate < curStart) window.appState.dateStartStr = fmt(newStartDate);
+                            if (newEndDate > curEnd) window.appState.dateEndStr = fmt(newEndDate);
 
                             if (document.getElementById('ui-date-start')) document.getElementById('ui-date-start').innerText = window.appState.dateStartStr;
                             if (document.getElementById('ui-date-end')) document.getElementById('ui-date-end').innerText = window.appState.dateEndStr;
@@ -1905,7 +1927,6 @@
                             if (window.fpEnd && window.fpEnd.setDate) window.fpEnd.setDate(window.appState.dateEndStr, false);
                         }
 
-                        // 6) تحديث الواجهة
                         const detailsModalEl = document.getElementById('detailsModal');
                         if (detailsModalEl && detailsModalEl.classList.contains('active') && window.currentActiveCategory) {
                             const visibleMonths = window.getVisibleMonths();
@@ -1916,7 +1937,10 @@
                         window.updateDashboard();
                         document.getElementById('excelInput').value = ''; 
 
-                        window.showCustomAlert(`تم مزامنة الملف بنجاح وتحديث قاعدة البيانات.\n\nتم استيراد والتأكد من تطابق (${rowsImported}) بنداً، وتم سحب (${cellsUpdated}) رقم نشط.\nالترتيب والبنود الآن تطابق ملف الإكسل 100%.\n\nاضغط على 'حفظ ومزامنة في السحابة' لاعتماد التعديلات نهائياً.`, "مزامنة شاملة ناجحة", "fa-check-circle");
+                        let extraMsg = "";
+                        if (removedMonthKeys.length > 0) extraMsg += `\nتمت إزالة (${removedMonthKeys.length}) شهر غير موجود في الملف.`;
+
+                        window.showCustomAlert(`تم مزامنة الملف بنجاح وتحديث قاعدة البيانات.\n\nتم استيراد والتأكد من تطابق (${rowsImported}) بنداً موزعة على الأقسام، وتم سحب (${cellsUpdated}) رقم نشط.${extraMsg}\n\nاضغط على 'حفظ ومزامنة في السحابة' لاعتماد التعديلات نهائياً.`, "مزامنة شاملة ناجحة", "fa-check-circle");
                         document.getElementById('cloud-status').innerHTML = '<i class="fa-solid fa-triangle-exclamation text-orange-400 ml-1"></i>بانتظار المزامنة';
 
                     } catch(error) {
