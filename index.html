@@ -491,7 +491,7 @@
                 </div>
             </div>
 
-            <!-- القسم الثالث: مسار التدفقات النقدية الزمني (تم التعديل الجذري ليتحمل 12 شهر بدون تمرير) -->
+            <!-- القسم الثالث: مسار التدفقات النقدية الزمني (شكل الكبسولات الذكي للنصوص الطويلة) -->
             <div class="flex-1 flex flex-col mt-2 mb-1 shrink-0 min-h-0">
                 <div class="flex items-center justify-between mb-2 shrink-0">
                     <h2 class="text-[15px] font-black text-[var(--charcoal-900)] flex items-center gap-2 border-r-4 border-[var(--gold-primary)] pr-2">
@@ -1259,20 +1259,17 @@
 
             let htmlStr = '';
             
-            // الحد الأقصى للأشهر التي نعرضها بدون تمرير
             const maxItemsWithoutScroll = 12;
             const isScrollable = groups.length > maxItemsWithoutScroll;
 
-            // الحاوية الخارجية
             htmlStr += `<div class="relative w-full ${isScrollable ? 'overflow-x-auto custom-scroll pb-2' : ''}">`;
             
-            // الخط المنقط للربط بين الأشهر
+            // تم ضبط top-[35px] لكي يمر الخط من منتصف الكبسولات تماماً
             if (isScrollable) {
-                htmlStr += `<div class="absolute top-[28px] left-[60px] right-[60px] border-t-[2px] border-dashed border-slate-300 -z-10" style="min-width: ${groups.length * 130}px"></div>`;
+                htmlStr += `<div class="absolute top-[35px] left-[60px] right-[60px] border-t-[2px] border-dashed border-slate-300 -z-10" style="min-width: ${groups.length * 130}px"></div>`;
                 htmlStr += `<div class="flex items-start gap-3 w-max px-2 py-2">`;
             } else {
-                htmlStr += `<div class="absolute top-[28px] left-[5%] right-[5%] border-t-[2px] border-dashed border-slate-300 -z-10"></div>`;
-                // استخدام نظام شبكي متمدد يملأ الشاشة بالكامل بدون سكرول
+                htmlStr += `<div class="absolute top-[35px] left-[5%] right-[5%] border-t-[2px] border-dashed border-slate-300 -z-10"></div>`;
                 htmlStr += `<div class="grid w-full py-2" style="grid-template-columns: repeat(${groups.length}, minmax(0, 1fr)); gap: 4px;">`;
             }
 
@@ -1298,12 +1295,12 @@
                     ? "flex flex-col items-center relative group shrink-0 w-[125px]" 
                     : "flex flex-col items-center relative group min-w-0";
 
-                // استخدام أحجام مُحكمة ومناسبة لعرض 12 بطاقة
+                // استخدام أحجام مرنة (كبسولة ذكية) لضمان احتواء النصوص الطويلة بشكل جميل
                 htmlStr += `
                     <div class="${containerClasses}">
-                        <div class="w-[48px] h-[48px] ${isLast ? 'bg-[var(--gold-primary)] border-[3px] border-white outline outline-2 outline-[var(--gold-primary)]' : 'bg-white border-[2px] border-slate-200'} rounded-full flex flex-col items-center justify-center mb-2 z-10 shadow-sm transition-transform group-hover:scale-105">
-                            <span class="text-[10px] font-black ${isLast ? 'text-white' : 'text-slate-700'} leading-none mb-0.5">${g.label}</span>
-                            <span class="text-[8px] font-bold ${isLast ? 'text-[#FEF08A]' : 'text-slate-400'} font-numbers leading-none">${g.sub}</span>
+                        <div class="h-[54px] min-w-[54px] w-max px-3 ${isLast ? 'bg-[var(--gold-primary)] border-[3px] border-white outline outline-2 outline-[var(--gold-primary)]' : 'bg-white border-[2px] border-slate-200'} rounded-full flex flex-col items-center justify-center mb-2 z-10 shadow-sm transition-transform group-hover:scale-105">
+                            <span class="text-[10px] font-black ${isLast ? 'text-white' : 'text-slate-700'} leading-none mb-1 text-center whitespace-nowrap">${g.label}</span>
+                            <span class="text-[9px] font-bold ${isLast ? 'text-[#FEF08A]' : 'text-slate-400'} font-numbers leading-none text-center">${g.sub}</span>
                         </div>
                         
                         <div class="bg-white border ${isLast ? 'border-[var(--gold-primary)] shadow-md' : 'border-slate-200 shadow-sm'} rounded-xl w-full max-w-[124px] mx-auto p-1.5 relative transition-all group-hover:-translate-y-0.5 hover:shadow-md">
@@ -1324,8 +1321,8 @@
                 `;
             });
 
-            htmlStr += `</div>`; // إغلاق شبكة الـ Grid أو الـ Flex
-            htmlStr += `</div>`; // إغلاق حاوية المسار
+            htmlStr += `</div>`;
+            htmlStr += `</div>`;
 
             tlContainer.innerHTML = htmlStr;
         }
@@ -1769,8 +1766,7 @@
         };
 
         // ===============================================
-        // منطق قراءة بيانات الإكسل واستخلاصها الذكي (الحل الجذري الشامل)
-        // يعتمد على الإكسل كمصدر وحيد للحقيقة (Single Source of Truth)
+        // منطق قراءة بيانات الإكسل واستخلاصها الذكي
         // ===============================================
         window.handleExcelImport = function(event) {
             const file = event.target.files[0];
@@ -1794,10 +1790,12 @@
 
                         const headers = rows[0];
                         let cellsUpdated = 0;
-                        let rowsImported = 0;
+                        const categories = ['opRec', 'opPay', 'invRec', 'invPay', 'finRec', 'finPay'];
 
                         const importedMonths = [];
                         const colIndexToMonthKey = {};
+                        const importedMonthKeysSet = new Set();
+                        let resurrectedCount = 0;
 
                         for (let c = 2; c < headers.length; c++) {
                             let headStr = headers[c] ? headers[c].toString() : "";
@@ -1806,130 +1804,173 @@
                             const parsed = window.parseMonthHeader(headStr);
                             if (!parsed) continue;
 
-                            let monthEntry = window.appState.months.find(m => m.name === parsed.name && m.year === parsed.year);
-                            
+                            let monthEntry = window.appState.months.find(m =>
+                                m.name === parsed.name && m.year === parsed.year
+                            );
+
                             if (!monthEntry) {
+                                const newKey = window.buildMonthKey(parsed.name, parsed.year);
                                 monthEntry = {
-                                    key: window.buildMonthKey(parsed.name, parsed.year),
+                                    key: newKey,
                                     name: parsed.name,
                                     year: parsed.year,
                                     label: `${parsed.name} ${parsed.year.slice(-2)}`
                                 };
+                                window.appState.months.push(monthEntry);
+                                ['opRec', 'opPay', 'invRec', 'invPay', 'finRec', 'finPay'].forEach(cat => {
+                                    window.appState[cat].forEach(item => {
+                                        if (item[newKey] === undefined) item[newKey] = 0;
+                                    });
+                                });
+                                resurrectedCount++;
                             }
-                            
+
                             colIndexToMonthKey[c] = monthEntry.key;
-                            importedMonths.push(monthEntry);
+                            if (!importedMonthKeysSet.has(monthEntry.key)) {
+                                importedMonths.push(monthEntry);
+                                importedMonthKeysSet.add(monthEntry.key);
+                            }
                         }
 
                         if (importedMonths.length === 0) {
-                            window.showCustomAlert("لم يتم التعرّف على أي عمود شهر صالح في الملف المُستورد. تأكد من تطابق القالب.", "تنبيه", "fa-triangle-exclamation");
+                            window.showCustomAlert("لم يتم التعرّف على أي عمود شهر صالح في الملف المُستورد. تم إلغاء العملية للحفاظ على بياناتك الحالية.", "تنبيه", "fa-triangle-exclamation");
                             document.getElementById('excelInput').value = '';
                             return;
                         }
 
-                        window.appState.months = importedMonths.slice().sort((a, b) => {
-                            return new Date(parseInt(a.year), arMonthsMap[a.name], 1).getTime() - new Date(parseInt(b.year), arMonthsMap[b.name], 1).getTime();
+                        const importedMonthKeys = importedMonths.map(m => m.key);
+                        categories.forEach(cat => {
+                            window.appState[cat].forEach(item => {
+                                importedMonthKeys.forEach(k => { item[k] = 0; });
+                            });
                         });
-
-                        const newDataContainers = {
-                            'opRec': [], 'opPay': [], 'invRec': [], 'invPay': [], 'finRec': [], 'finPay': []
-                        };
-
-                        const categoryMap = {
-                            'مقبوضات تشغيلية': 'opRec',
-                            'مدفوعات تشغيلية': 'opPay',
-                            'مقبوضات استثمارية': 'invRec',
-                            'مدفوعات استثمارية': 'invPay',
-                            'مقبوضات تمويلية': 'finRec',
-                            'مدفوعات تمويلية': 'finPay'
-                        };
 
                         for (let r = 1; r < rows.length; r++) {
                             const row = rows[r];
                             let rawName = row[0];
-                            let rawCategory = row[1];
+                            if (!rawName) continue;
 
-                            if (!rawName || !rawCategory) continue;
+                            let cleanName = rawName.toString().replace(/[\u200B-\u200D\uFEFF]/g, '').replace(/\s+/g, ' ').trim();
 
-                            let cleanName = rawName.toString().replace(/[\u200B-\u200D\uFEFF]/g, '').trim();
-                            let cleanCatText = rawCategory.toString().replace(/[\u200B-\u200D\uFEFF]/g, '').trim();
+                            let matchedItem = null;
+                            let matchedCat = null;
 
-                            let targetCategoryKey = categoryMap[cleanCatText];
-                            
-                            if (!targetCategoryKey) continue;
+                            categories.forEach(cat => {
+                                let found = window.appState[cat].find(i => i.name.replace(/\s+/g, ' ').trim() === cleanName);
+                                if (found) { matchedItem = found; matchedCat = cat; }
+                            });
 
-                            let newItem = {
-                                id: 'item_' + Math.random().toString(36).substr(2, 9),
-                                name: cleanName
-                            };
+                            if (matchedItem) {
+                                for (let c in colIndexToMonthKey) {
+                                    const mKey = colIndexToMonthKey[c];
+                                    let cellVal = row[c];
 
-                            window.appState.months.forEach(m => newItem[m.key] = 0);
+                                    if (cellVal !== undefined && cellVal !== null && cellVal.toString().trim() !== "") {
+                                        let s = cellVal.toString();
+                                        s = s.replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
+                                        s = s.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷٨٩'.indexOf(d));
+                                        s = s.replace(/,/g, '');
+                                        s = s.replace(/[^0-9.-]/g, '');
 
-                            for (let c in colIndexToMonthKey) {
-                                const mKey = colIndexToMonthKey[c];
-                                let cellVal = row[c];
+                                        let parsedNum = parseFloat(s) || 0;
 
-                                if (cellVal !== undefined && cellVal !== null && cellVal.toString().trim() !== "") {
-                                    let s = cellVal.toString();
-                                    s = s.replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
-                                    s = s.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷٨٩'.indexOf(d));
-                                    s = s.replace(/,/g, '');
-                                    s = s.replace(/[^0-9.-]/g, '');
+                                        if (['opPay', 'invPay', 'finPay'].includes(matchedCat)) {
+                                            parsedNum = Math.abs(parsedNum);
+                                        }
 
-                                    let parsedNum = parseFloat(s) || 0;
-
-                                    if (['opPay', 'invPay', 'finPay'].includes(targetCategoryKey)) {
-                                        parsedNum = Math.abs(parsedNum);
+                                        matchedItem[mKey] = parsedNum;
+                                        cellsUpdated++;
                                     }
-
-                                    newItem[mKey] = parsedNum;
-                                    cellsUpdated++;
                                 }
                             }
-                            
-                            newDataContainers[targetCategoryKey].push(newItem);
-                            rowsImported++;
                         }
 
-                        Object.keys(newDataContainers).forEach(cat => {
-                            window.appState[cat] = newDataContainers[cat];
+                        const removedMonthKeys = window.appState.months
+                            .filter(m => !importedMonthKeysSet.has(m.key))
+                            .map(m => m.key);
+
+                        if (removedMonthKeys.length > 0) {
+                            window.appState.months = importedMonths.slice();
+
+                            categories.forEach(cat => {
+                                window.appState[cat].forEach(item => {
+                                    removedMonthKeys.forEach(k => { delete item[k]; });
+                                });
+                            });
+                        }
+
+                        window.appState.months.sort((a, b) => {
+                            const ta = new Date(parseInt(a.year), arMonthsMap[a.name], 1).getTime();
+                            const tb = new Date(parseInt(b.year), arMonthsMap[b.name], 1).getTime();
+                            return ta - tb;
                         });
 
-                        if (window.appState.months.length > 0) {
-                            const firstM = window.appState.months[0];
-                            const lastM = window.appState.months[window.appState.months.length - 1];
+                        if (importedMonths.length > 0) {
+                            const sortedImported = importedMonths.slice().sort((a, b) => {
+                                const ta = new Date(parseInt(a.year), arMonthsMap[a.name], 1).getTime();
+                                const tb = new Date(parseInt(b.year), arMonthsMap[b.name], 1).getTime();
+                                return ta - tb;
+                            });
+                            const firstM = sortedImported[0];
+                            const lastM = sortedImported[sortedImported.length - 1];
 
                             const enMonthsShort = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
                             const newStartDate = new Date(parseInt(firstM.year), arMonthsMap[firstM.name], 1);
                             const newEndDate = new Date(parseInt(lastM.year), arMonthsMap[lastM.name] + 1, 0);
 
-                            const fmt = (d) => `${String(d.getDate()).padStart(2, '0')} ${enMonthsShort[d.getMonth()]} ${d.getFullYear()}`;
+                            const fmt = (d) => {
+                                const dd = String(d.getDate()).padStart(2, '0');
+                                const mm = enMonthsShort[d.getMonth()];
+                                const yy = d.getFullYear();
+                                return `${dd} ${mm} ${yy}`;
+                            };
 
-                            window.appState.dateStartStr = fmt(newStartDate);
-                            window.appState.dateEndStr = fmt(newEndDate);
+                            const curStart = new Date(window.appState.dateStartStr);
+                            const curEnd = new Date(window.appState.dateEndStr);
 
-                            if (document.getElementById('ui-date-start')) document.getElementById('ui-date-start').innerText = window.appState.dateStartStr;
-                            if (document.getElementById('ui-date-end')) document.getElementById('ui-date-end').innerText = window.appState.dateEndStr;
-                            if (window.fpStart && window.fpStart.setDate) window.fpStart.setDate(window.appState.dateStartStr, false);
-                            if (window.fpEnd && window.fpEnd.setDate) window.fpEnd.setDate(window.appState.dateEndStr, false);
+                            if (newStartDate < curStart) {
+                                window.appState.dateStartStr = fmt(newStartDate);
+                            }
+                            if (newEndDate > curEnd) {
+                                window.appState.dateEndStr = fmt(newEndDate);
+                            }
+
+                            const uiStart = document.getElementById('ui-date-start');
+                            const uiEnd = document.getElementById('ui-date-end');
+                            if (uiStart) uiStart.innerText = window.appState.dateStartStr;
+                            if (uiEnd) uiEnd.innerText = window.appState.dateEndStr;
+                            if (window.fpStart && typeof window.fpStart.setDate === 'function') window.fpStart.setDate(window.appState.dateStartStr, false);
+                            if (window.fpEnd && typeof window.fpEnd.setDate === 'function') window.fpEnd.setDate(window.appState.dateEndStr, false);
                         }
 
+                        const visibleMonths = window.getVisibleMonths();
                         const detailsModalEl = document.getElementById('detailsModal');
-                        if (detailsModalEl && detailsModalEl.classList.contains('active') && window.currentActiveCategory) {
-                            const visibleMonths = window.getVisibleMonths();
-                            window.renderGridHeader(visibleMonths);
-                            window.renderDetailsList(visibleMonths);
+                        const isDetailsOpen = detailsModalEl && detailsModalEl.classList.contains('active') && !!window.currentActiveCategory;
+
+                        if (isDetailsOpen) {
+                            try {
+                                window.renderGridHeader(visibleMonths);
+                                window.renderDetailsList(visibleMonths);
+                            } catch (uiErr) {
+                                console.warn("UI refresh skipped:", uiErr);
+                            }
                         }
 
                         window.updateDashboard();
+
                         document.getElementById('excelInput').value = ''; 
 
-                        window.showCustomAlert(`تم مزامنة الملف بنجاح وتحديث قاعدة البيانات.\n\nتم استيراد والتأكد من تطابق (${rowsImported}) بنداً موزعة على الأقسام، وتم سحب (${cellsUpdated}) رقم نشط.\nالترتيب والبنود الآن تطابق ملف الإكسل 100%.\n\nاضغط على 'حفظ ومزامنة في السحابة' لاعتماد التعديلات نهائياً.`, "مزامنة شاملة ناجحة", "fa-check-circle");
+                        let extraMsg = "";
+                        if (removedMonthKeys.length > 0) extraMsg += `\nتمت إزالة (${removedMonthKeys.length}) شهر غير موجود في الملف.`;
+                        if (resurrectedCount > 0) extraMsg += `\nتمت استعادة (${resurrectedCount}) شهر إلى النظام من الملف.`;
+
+                        window.showCustomAlert(`تم الاستيراد بنجاح مطلق.\nتم قراءة وتطبيق (${cellsUpdated}) خلية رقمية من الملف المرفق.${extraMsg}\n\nالأرقام الآن معروضة أمامك، اضغط على زر الحفظ والمزامنة لاعتمادها في السحابة.`, "نجاح العملية", "fa-check-circle");
                         document.getElementById('cloud-status').innerHTML = '<i class="fa-solid fa-triangle-exclamation text-orange-400 ml-1"></i>بانتظار المزامنة';
 
                     } catch(error) {
                         console.error("Fatal Import Error:", error);
-                        window.showCustomAlert("حدث خطأ تقني غير متوقع أثناء معالجة الملف.\nتأكد من أن أسماء التصنيفات في العمود الثاني مطابقة للقالب تماماً.", "فشل الاستيراد", "fa-xmark-circle");
+                        const detail = (error && error.message) ? `\n\nالتفصيل التقني: ${error.message}` : "";
+                        window.showCustomAlert("حدث خطأ تقني غير متوقع. يرجى التأكد من أن الملف هو قالب النظام وأنه غير تالف." + detail, "فشل الاستيراد", "fa-xmark-circle");
                     }
                 };
                 reader.readAsArrayBuffer(file);
