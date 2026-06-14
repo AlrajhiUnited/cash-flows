@@ -1,0 +1,6 @@
+@import "tailwindcss";
+@import "@heroui/styles/css";
+
+body {
+  font-family: 'Tajawal', sans-serif;
+}
